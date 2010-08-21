@@ -28,13 +28,13 @@ import dbus.glib
 from dbus.mainloop.glib import DBusGMainLoop
 import gtk
 
-gobject.threads_init()
+gobject.threads_init()  #@UndefinedVariable
 dbus.glib.init_threads()
 DBusGMainLoop(set_as_default=True)
 
 from app.system import base as base
 base.debug=DEV_MODE
-from app.system import mswitch
+from app.system import mswitch #@UnusedImport
 
 ### ===========================================================
 ### Agents which require configuration
@@ -59,13 +59,13 @@ _la.start()
 #_ca=CacheAgent(DB_PATH, DEV_MODE)
 #_ca.start()
 
-from app.agents._tester import TesterAgent
+from app.agents._tester import TesterAgent  #@UnusedImport
 
 ### ===========================================================
 ###
 
 #from app.agents import adbus
-from app.agents import authorize
+from app.agents import authorize  #@UnusedImport
 from app.agents.ui import UiAgent
 _uia=UiAgent(TIME_BASE)
 gobject.timeout_add(TIME_BASE, _uia.tick)

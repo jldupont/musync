@@ -5,7 +5,8 @@
     
     Messages Processed:
     - "rating"
-    - "out_rating" : transit to "rating" Dbus message
+    - "out_rating"  : transit to "/ratings/rating" Dbus message
+    - "out_updated" : transit to "/ratings/updated" Dbus message
     
     Messages Generated:
     - "qrating"
@@ -83,8 +84,15 @@ class RatingsSignalRx(dbus.service.Object):
     @dbus.service.signal(dbus_interface="com.systemical.services", signature="ss")
     def rating(self, source, timestamp, artist_name, album_name, track_name, rating):
         """
-        Signal emitter for "rating"
+        Signal emitter for "/ratings/rating"
         """
+
+    @dbus.service.signal(dbus_interface="com.systemical.services", signature="i")
+    def updated(self, timestamp):
+        """
+        Signal emitter for "/ratings/updated"
+        """
+        
         
     ## ==========================================================================================
     ## SIGNAL RECEIVERS
@@ -105,6 +113,9 @@ class DbusAgent(AgentThreadedBase):
 
     def h_out_rating(self, source, timestamp, artist_name, album_name, track_name, rating):
         self.srx.rating(source, timestamp, artist_name, album_name, track_name, rating) 
+
+    def h_out_updated(self, timestamp):
+        self.srx.updated(timestamp)
 
 
 _=DbusAgent()
