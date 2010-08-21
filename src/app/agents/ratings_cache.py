@@ -72,6 +72,8 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             self.dbh.executeStatement(statement, now, timestamp, 
                                       artist_name, album_name, track_name, "", rating)
             self.dbh.commit()
+            
+            self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
         except Exception,e:
             self.pub("log", "error", "%s: error writing to database for inserting a rating (%s)" % (self.__class__, e))
 

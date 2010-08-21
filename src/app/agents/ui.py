@@ -48,7 +48,7 @@ class UiWindow(object):
                 ,"eVerificationCode"
                 ,"cbAuthorized", "cbMusicbrainz"
               
-                ,"lRequestData", "lAnswersData", "lUpdatesData", "lRatingsData"
+                ,"lRequestsData", "lAnswersData", "lUpdatesData", "lRatingsData"
              ]
     
     def __init__(self, glade_file):
@@ -120,10 +120,10 @@ class UiWindow(object):
         self.cbMusicbrainz.set_sensitive(False)
 
     def _updateCounters(self, counters):
-        for counter in counters.iteritems():
+        for counter, value in counters.iteritems():
             widget_name=self.COUNTERS_WIDGETS[counter]
             widget=getattr(self, widget_name)
-            widget.set_text( counters[counter] )
+            widget.set_text( str(value) )
 
 
 class UiAgent(UiAgentBase):
