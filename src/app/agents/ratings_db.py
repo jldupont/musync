@@ -13,6 +13,7 @@ __all__=["RatingsDbAgent"]
 class RatingsDbAgent(AgentThreadedWithEvents):
     
     TIMERS_SPEC=[ ("min", 1, "t_announceDbCount")
+                 ,("min", 1, "t_announceUpdated")  
                  #,("sec", 10, "t_countRatings")
                  ]
 
@@ -29,7 +30,8 @@ class RatingsDbAgent(AgentThreadedWithEvents):
     
     def __init__(self, dbpath, dev_mode=False):
         AgentThreadedWithEvents.__init__(self)
-
+        
+        self.current_count=0
         self.dbh=DbHelper(dbpath, "ratings_db", self.TABLE_PARAMS)
 
     ## ====================================================================== HELPERS
@@ -38,11 +40,18 @@ class RatingsDbAgent(AgentThreadedWithEvents):
 
     ## ====================================================================== TIMERS
     ##
+    def t_announceUpdated(self):
+        e=self.getLatestUpdated()
+        try:    updated=e["updated"]
+        except: updated=None
+        
+        self.pub("out_updated", updated, self.current_count)
 
     def t_announceDbCount(self, *_):
         """
         Announces the count of "ratings" in the db
         """
-        self.pub("ratings_count", self.dbh.getRowCount())
+        self.current_count=self.dbh.getRowCount()
+        self.pub("ratings_count", self.current_count)
 
         

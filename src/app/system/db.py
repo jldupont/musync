@@ -107,4 +107,16 @@ class DbHelper(object):
             result=default
         return result
 
+    def getPage(self, limit=100):
+        statement="""SELECT * FROM %s 
+                        ORDER BY updated DESC LIMIT %s""" % (self.table_name, limit)
+        self.executeStatement(statement)
+        return self.fetchAll()
+    
+    def getLatestUpdated(self):
+        statement="""SELECT * FROM %s 
+                        ORDER BY updated DESC LIMIT 1""" % self.table_name
+        self.executeStatement(statement)
+        return self.fetchOne()
+        
         
