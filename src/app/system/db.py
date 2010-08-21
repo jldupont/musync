@@ -61,6 +61,14 @@ class DbHelper(object):
         self.c.execute("""DELETE * FROM %s 
                             WHERE id=?""" % self.table_name, (id,))
 
+    def getRowCount(self):
+        try: 
+            self.c.execute("""SELECT Count(*) FROM %s""" % self.table_name)
+            count=self.fetchOne(0)
+        except:
+            count=0
+        return count
+
     def executeStatement(self, statement, *p):
         self.c.execute(statement, p)
         

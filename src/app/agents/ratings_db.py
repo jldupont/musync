@@ -34,7 +34,7 @@ class RatingsDbAgent(AgentThreadedWithEvents):
 
     ## ====================================================================== HELPERS
     ##
-
+        
 
     ## ====================================================================== TIMERS
     ##
@@ -43,5 +43,6 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         """
         Announces the count of "ratings" in the db
         """
-        
+        self.pub("ratings_count", self.dbh.getRowCount())
+
         

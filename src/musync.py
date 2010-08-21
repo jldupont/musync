@@ -41,7 +41,14 @@ from app.system import mswitch #@UnusedImport
 ###
 from app.agents.notifier import NotifierAgent
 import app.agents.ratings_dbus  #@UnusedImport
-import app.agents.ratings_cache #@UnusedImport
+from app.agents.ratings_cache import RatingsCacheAgent
+_rca=RatingsCacheAgent(DB_PATH, DEV_MODE)
+_rca.start()
+
+from app.agents.ratings_db import RatingsDbAgent
+_rda=RatingsDbAgent(DB_PATH, DEV_MODE)
+_rda.start()
+
 import app.agents.mb_dbus       #@UnusedImport
 
 from app.agents.tray import TrayAgent

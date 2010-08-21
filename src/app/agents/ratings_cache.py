@@ -59,31 +59,49 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         
         This message is issued as a result of receiving the "/Ratings/rating" DBus signal
         """
-        now=time.time()
-        statement="""INSERT INTO cache (created, updated,
-                            source,
-                            artist_name, 
-                            album_name, 
-                            track_name,
-                            track_mbid,
-                            rating) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?)"""
+        now=time.time()        
+        statement="""UPDATE %s SET updated=?, rating=? 
+                    WHERE artist_name=? AND album_name=? AND track_name=?""" % self.dbh.table_name
         try:
-            self.dbh.executeStatement(statement, now, timestamp, 
-                                      artist_name, album_name, track_name, "", rating)
+            self.dbh.executeStatement(statement, timestamp, rating, 
+                                      artist_name, album_name, track_name)
             self.dbh.commit()
             
-            self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
+            
         except Exception,e:
             self.pub("log", "error", "%s: error writing to database for inserting a rating (%s)" % (self.__class__, e))
+            return
+
+        rc=self.dbh.rowCount()
+        if rc>0:
+            self.dprint("! rating updated in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
+            return            
+        
+        if rc==0:
+            statement="""INSERT INTO %s (created, updated,
+                                source,
+                                artist_name, 
+                                album_name, 
+                                track_name,
+                                track_mbid,
+                                rating) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?)""" % self.dbh.table_name
+            try:
+                self.dbh.executeStatement(statement, now, timestamp, 
+                                          artist_name, album_name, track_name, "", rating)
+                self.dbh.commit()
+                
+                self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
+            except Exception,e:
+                self.pub("log", "error", "%s: error writing to database for inserting a rating (%s)" % (self.__class__, e))
 
     def _updateMbid(self, artist_name, track_name, track_mbid):
         """
         Updates the track_mbid parameter of specified tracks
         """
-        statement="""UPDATE cache SET 
+        statement="""UPDATE %s SET 
                     track_mbid=?
-                    WHERE artist_name=? AND track_name=?"""
+                    WHERE artist_name=? AND track_name=?""" % self.dbh.table_name
         self.dbh.executeStatement(statement, track_mbid, artist_name, track_name)
         self.dbh.commit()
 

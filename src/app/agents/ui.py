@@ -18,6 +18,7 @@
     - "start_verification"
     
     Messages Processed:
+    - "ratings_count"
     - "mb_tracks"  (coming from Dbus)
     - "authorization"
     - "oauth"
