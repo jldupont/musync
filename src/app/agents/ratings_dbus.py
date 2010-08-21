@@ -81,7 +81,7 @@ class RatingsSignalRx(dbus.service.Object):
     ## ==========================================================================================
     ## SIGNAL EMITTERS
 
-    @dbus.service.signal(dbus_interface="com.systemical.services", signature="ss")
+    @dbus.service.signal(dbus_interface="com.systemical.services", signature="sisssd")
     def rating(self, source, timestamp, artist_name, album_name, track_name, rating):
         """
         Signal emitter for "/ratings/rating"

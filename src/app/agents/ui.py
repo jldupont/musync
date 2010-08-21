@@ -37,10 +37,18 @@ GLADE_FILE=path+"/ui.glade"
         
 class UiWindow(object):
     
+    COUNTERS_WIDGETS={ "requests": "lRequestsData"
+                      ,"answers":  "lAnswersData"
+                      ,"updates":  "lUpdatesData"
+                      ,"ratings":  "lRatingsData"
+                      }
+        
     ## widgets to "wire-in"
     widgets=[ "bAuthorize", "bVerify"
                 ,"eVerificationCode"
                 ,"cbAuthorized", "cbMusicbrainz"
+              
+                ,"lRequestData", "lAnswersData", "lUpdatesData", "lRatingsData"
              ]
     
     def __init__(self, glade_file):
@@ -111,8 +119,15 @@ class UiWindow(object):
         self.cbMusicbrainz.set_active(True)
         self.cbMusicbrainz.set_sensitive(False)
 
+    def _updateCounters(self, counters):
+        for counter in counters.iteritems():
+            widget_name=self.COUNTERS_WIDGETS[counter]
+            widget=getattr(self, widget_name)
+            widget.set_text( counters[counter] )
+
 
 class UiAgent(UiAgentBase):
+    
     def __init__(self, time_base):
         UiAgentBase.__init__(self, time_base)
         
@@ -121,6 +136,8 @@ class UiAgent(UiAgentBase):
         
         self.state="wait_auth"
         self.mb_detected=False
+        
+        self.counters={}
 
     def h_mb_tracks(self, *_):
         """
@@ -151,8 +168,12 @@ class UiAgent(UiAgentBase):
         self._do_update_state()
 
     def do_updates(self):
+        """
+        Called by the super-class upon the "show" message
+        """
         self._do_update_mb()
         self._do_update_state()
+        self._do_update_counters()
 
     def _do_update_mb(self):
         if self.window:
@@ -163,8 +184,15 @@ class UiAgent(UiAgentBase):
         if self.window:
             self.window._updateState(self.state)
 
-        
+    def _do_update_counters(self):
+        if self.window:
+            self.window._updateCounters(self.counters)
 
+    ## =============================================================================
+    ## Counter Processing
+    ## =============================================================================
+    
+        
         
 
 if __name__=="__main__":
