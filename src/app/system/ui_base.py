@@ -15,6 +15,7 @@ __all__=["UiAgentBase"]
 
 class UiAgentBase(object):
     
+    REFRESH_TIMEOUT=10
     LOW_PRIORITY_MESSAGE_BURST_SIZE=5
     
     def __init__(self, time_base):
@@ -62,6 +63,11 @@ class UiAgentBase(object):
         """
         raise RuntimeError("must be implemented")
 
+    def refreshUi(self):
+        """
+        This can be subclassed - it will be called every REFRESH_TIMEOUT seconds
+        """
+
     def tick(self, *_):
         """
         Performs message dispatch
@@ -74,6 +80,9 @@ class UiAgentBase(object):
         
         if tick_second:
             self.sec_count += 1
+
+            if (self.sec_count % self.REFRESH_TIMEOUT)==0:
+                self.refreshUi()
 
             tick_min=(self.sec_count % 60)==0
             if tick_min:

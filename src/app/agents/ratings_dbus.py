@@ -4,12 +4,12 @@
     com.systemical.services/ratings/[rating;qrating]
     
     Messages Processed:
-    - "rating"
     - "out_rating"  : transit to "/ratings/rating" Dbus message
     - "out_updated" : transit to "/ratings/updated" Dbus message
     
     Messages Generated:
-    - "qrating"
+    - "in_rating"
+    - "in_qrating"
     
     ==========================================================
     
@@ -98,10 +98,10 @@ class RatingsSignalRx(dbus.service.Object):
     ## SIGNAL RECEIVERS
 
     def rx_rating(self, source, timestamp, artist_name, album_name, track_name, rating):
-        mswitch.publish(self, "rating", source, timestamp, artist_name, album_name, track_name, rating)
+        mswitch.publish(self, "in_rating", source, timestamp, artist_name, album_name, track_name, rating)
 
     def rx_qrating(self, artist_name, album_name, track_name):
-        mswitch.publish(self, "qrating", artist_name, album_name, track_name)
+        mswitch.publish(self, "in_qrating", artist_name, album_name, track_name)
 
 
 

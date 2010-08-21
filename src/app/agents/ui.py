@@ -136,8 +136,12 @@ class UiAgent(UiAgentBase):
         
         self.state="wait_auth"
         self.mb_detected=False
+        self.something_was_updated=True
         
-        self.counters={}
+        self.counters={"requests":0
+                       ,"answers":0
+                       ,"updates":0
+                       ,"ratings":0}
 
     def h_mb_tracks(self, *_):
         """
@@ -185,13 +189,46 @@ class UiAgent(UiAgentBase):
             self.window._updateState(self.state)
 
     def _do_update_counters(self):
+        self.refreshUi()
+
+    def refreshUi(self):
         if self.window:
-            self.window._updateCounters(self.counters)
+            if self.something_was_updated:
+                self.something_was_updated=False
+                self.window._updateCounters(self.counters)
+                
+        
 
     ## =============================================================================
     ## Counter Processing
     ## =============================================================================
-    
+    def h_in_qrating(self, *_):
+        """
+        An input request (question) from DBus
+        """
+        self.counters["requests"] += 1
+        self.something_was_updated=True
+        
+    def h_out_rating(self, *_):
+        """
+        Musync answers
+        """
+        self.counters["answers"] += 1
+        self.something_was_updated=True
+
+    def h_in_rating(self, *_):
+        """
+        An application updates a rating
+        """
+        self.counters["updates"] += 1
+        self.something_was_updated=True
+        
+    def h_ratings_count(self, count):
+        """
+        Total ratings in the local cache
+        """
+        self.counters["ratings"] = count
+        self.something_was_updated=True
         
         
 
