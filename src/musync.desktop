@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Music related synchronization over http://services.systemical.com/
+Comment=See http://www.systemical.com/
+Exec=musync
+Icon=musync

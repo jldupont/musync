@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# @author: Jean-Lou Dupont
+# http://www.systemical.com/
+
+cd /usr/lib/musync
+
+export DISPLAY=:0.0
+python musync.py
