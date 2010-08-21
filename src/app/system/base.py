@@ -197,7 +197,7 @@ class AgentThreadedWithEvents(AgentThreadedBase):
             entries.append((interval, callback_name))
         
         
-    def h_tick(self, _ticks_per_second, 
+    def h___tick__(self, _ticks_per_second, 
                second_marker, min_marker, hour_marker, day_marker,
                sec_count, min_count, hour_count, day_count):
         """

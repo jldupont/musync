@@ -115,7 +115,7 @@ class LoggerAgent(AgentThreadedBase):
         ## our quick lookup dict too
         self.dailyQuotaReached={}
             
-    def h_tick(self, ticks_second, 
+    def h___tick__(self, ticks_second, 
                tick_second, tick_min, tick_hour, tick_day, 
                 sec_count, min_count, hour_count, day_count):
         """

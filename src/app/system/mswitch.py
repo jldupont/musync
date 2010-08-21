@@ -130,8 +130,9 @@ class BasicSwitch(Thread):
                     print "agent(%s) not interested mtype(%s)" % (str(q), mtype)
                     self.rmap[(q, mtype)]=True
             """
-            #if mtype!="tick":
-            #    print "<<< do_pub: mtype(%s) q(%s) sq(%s)" % (mtype, q, sq)
+            if mtype!="__tick__":
+                print "<<< do_pub: mtype(%s) q(%s) sq(%s)" % (mtype, q, sq)
+                
             ### Agent notified interest OR not sure yet            
             if interest==True or interest==None:
                 if mtype.startswith("__"):

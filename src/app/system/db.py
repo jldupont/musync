@@ -38,7 +38,7 @@ class DbHelper(object):
             ## order is critical!
             self.fields.append(col_name)            
             cols += "%s %s," % (col_name, col_type)
-        cols.rstrip(",")
+        cols=cols.rstrip(",")
         
         self.create_statement = self.CREATE_STATEMENT_TEMPLATE % ({"table":self.table_name, "columns": cols})
         

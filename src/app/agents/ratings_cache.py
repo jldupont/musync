@@ -43,6 +43,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                   ,("artist_name", "text")
                   ,("album_name",  "text")
                   ,("track_name",  "text")
+                  ,("track_mbid",   "text")
                   ,("rating",      "float")
                   ]
     
@@ -122,8 +123,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         """
         Returns the next entry to upload
         """
-        statement="""SELECT * from cache ORDER BY updated ASC LIMIT ?
-        """
+        statement="""SELECT * from %s ORDER BY updated ASC LIMIT ?""" % self.dbh.table_name
         self.dbh.executeStatement(statement, limit)
         entries=self.dbh.fetchAllEx()
         
@@ -147,13 +147,13 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
     ## ===============================================================================
 
 
-    def t_processMbid(self):
+    def t_processMbid(self, *_):
         """
         Timer elapsed - Mbid processing
         """
-        statement="""SELECT * FROM cache
-                    WHERE track_mbid='' LIMIT ?
-        """
+        statement="""SELECT * FROM %s
+                    WHERE track_mbid='' LIMIT ?""" % self.dbh.table_name
+
         self.dbh.executeStatement(statement, self.BATCH_MBID_MAX)
         entries=self.dbh.fetchAllEx([])
         for entry in entries:
