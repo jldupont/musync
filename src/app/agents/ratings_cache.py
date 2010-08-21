@@ -51,7 +51,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
     def __init__(self, dbpath, dev_mode=False):
         AgentThreadedWithEvents.__init__(self)
 
-        self.dbh=DbHelper(dbpath, "cache", self.TABLE_PARAMS)
+        self.dbh=DbHelper(dbpath, "ratings_cache", self.TABLE_PARAMS)
 
     def h_in_rating(self, source, _ref, timestamp, artist_name, album_name, track_name, rating):
         """

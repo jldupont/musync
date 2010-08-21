@@ -47,7 +47,7 @@
             the rating associated with the specified track.  Sync-Playlists will reply
             using the "rating" signal (described above).
 
-    * (OUT) updated(timestamp)
+    * (OUT) updated(timestamp, ratings_count)
     
             Signal indicating when was the last update performed on the local database
             @param timestamp: (integer) the time in seconds since the epoch, in UTC
@@ -107,8 +107,8 @@ class RatingsSignalRx(dbus.service.Object):
         Signal emitter for "/ratings/rating"
         """
 
-    @dbus.service.signal(dbus_interface="com.systemical.services", signature="i")
-    def updated(self, timestamp):
+    @dbus.service.signal(dbus_interface="com.systemical.services", signature="ii")
+    def updated(self, timestamp, ratings_count):
         """
         Signal emitter for "/ratings/updated"
         """
@@ -136,8 +136,8 @@ class DbusAgent(AgentThreadedBase):
     def h_out_rating(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         self.srx.rating(source, timestamp, artist_name, album_name, track_name, rating) 
 
-    def h_out_updated(self, timestamp):
-        self.srx.updated(timestamp)
+    def h_out_updated(self, timestamp, ratings_count):
+        self.srx.updated(timestamp, ratings_count)
 
 
 _=DbusAgent()
