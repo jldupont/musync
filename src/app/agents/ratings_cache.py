@@ -129,19 +129,21 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         
         self.pub("to_upload", entries)
 
-    def h_mb_tracks(self, source, ref, list_dic):
+    def h_mb_tracks(self, _source, ref, list_dic):
         """
         Update the mbid fields of the entries
         """
         if list_dic is None:
             return
         
-        for track_details in list_dic:
-            artist_name=track_details["artist_name"]
-            track_name=track_details["track_name"]
-            track_mbid=track_details["track_mbid"]
-            self._updateMbid(artist_name, track_name, track_mbid)
-
+        try:
+            for track_details in list_dic:
+                artist_name=track_details["artist_name"]
+                track_name=track_details["track_name"]
+                track_mbid=track_details["track_mbid"]
+                self._updateMbid(artist_name, track_name, track_mbid)
+        except Exception,e:
+            self.pub("llog", "err", "error", "RatingsCache: problem updating 'track_mbid' (%s)" % e)
     ## ===============================================================================
     ## =============================================================================== EVENTS
     ## ===============================================================================
@@ -158,7 +160,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         entries=self.dbh.fetchAllEx([])
         for entry in entries:
             ref="musync:%s" % entry["id"]
-            self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"])
+            self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"], "low")
         
 
 """        

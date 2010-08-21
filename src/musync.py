@@ -11,9 +11,11 @@ ICON_FILE=APP_NAME+".png"
 LOG_PATH="~/"+APP_NAME+".log"
 DB_PATH ="~/"+APP_NAME+".sqlite"
 HELP_URL="http://www.systemical.com/doc/opensource/"+APP_NAME
-DEV_MODE=True
 TIME_BASE=250  ##milliseconds
 TICKS_SECOND=1000/TIME_BASE
+
+MSWITCH_OBSERVE_MODE=True
+DEV_MODE=True
        
 import os
 import sys
@@ -35,6 +37,7 @@ DBusGMainLoop(set_as_default=True)
 from app.system import base as base
 base.debug=DEV_MODE
 from app.system import mswitch #@UnusedImport
+mswitch.observe_mode=MSWITCH_OBSERVE_MODE
 
 ### ===========================================================
 ### Agents which require configuration

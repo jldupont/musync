@@ -13,8 +13,10 @@
 from threading import Thread
 from Queue import Queue, Empty
 
-__all__=["publish", "subscribe"]
-
+__all__=["publish", "subscribe", "observe_mode"]
+FILTER_OUT=["__tick__", "log", "llog"]
+            
+observe_mode=False
 
 class BasicSwitch(Thread):
     """
@@ -130,11 +132,14 @@ class BasicSwitch(Thread):
                     print "agent(%s) not interested mtype(%s)" % (str(q), mtype)
                     self.rmap[(q, mtype)]=True
             """
-            if mtype!="__tick__":
-                print "<<< do_pub: mtype(%s) q(%s) sq(%s)" % (mtype, q, sq)
                 
             ### Agent notified interest OR not sure yet            
             if interest==True or interest==None:
+
+                if observe_mode:
+                    if mtype not in FILTER_OUT:
+                        print "<<< do_pub: mtype(%s) q(%s) sq(%s)" % (mtype, q, sq)
+                
                 if mtype.startswith("__"):
                     sq.put((mtype, payload), block=False)
                 else:

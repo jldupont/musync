@@ -42,7 +42,10 @@ class MBSignalRx(dbus.service.Object):
         """
         DBus signal handler - /Tracks/Tracks
         """
-        mswitch.publish(self.agent, "mb_tracks", source, ref, list_dic)
+        try:    ours=(ref.split(":")[0])=="musync"
+        except: ours=False
+        if ours:
+            mswitch.publish(self.agent, "mb_tracks", source, ref, list_dic)
 
 
 
@@ -53,7 +56,7 @@ class DbusAgent(AgentThreadedBase):
 
         self.srx=MBSignalRx(self)
                    
-    def hq_mb_track(self, ref, artist, title):
+    def hq_mb_track(self, ref, artist, title, priority):
         """
         Handler for the 'mb_track?' message
         
@@ -62,7 +65,7 @@ class DbusAgent(AgentThreadedBase):
         if (artist is None) or (title is None):
             return
     
-        self.srx.qTrack(ref, artist, title)
+        self.srx.qTrack(ref, artist, title, priority)
             
 _=DbusAgent()
 _.start()
