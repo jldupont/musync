@@ -9,15 +9,11 @@
 
     Messages Processed:
     ===================
-    - "rating"
+    - "in_rating"
     - "rating_uploaded"
-    
         
     Messages Emitted:
     =================
-    - "rating"
-    - "mbid?"
-    - "to_upload"
     
     
     INSERT INTO cache () VALUES ()
@@ -36,7 +32,8 @@ __all__=["RatingsCacheAgent",]
 
 class RatingsCacheAgent(AgentThreadedWithEvents):
     
-    TIMERS_SPEC=[ ("min", 1, "t_ProcessMbid")
+    TIMERS_SPEC=[ ("min", 1, "t_processMbid")
+                 #,("sec", 10, "t_countRatings")
                  ]
 
     TABLE_PARAMS=[("id",           "integer primary key")
@@ -56,11 +53,11 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
 
         self.dbh=DbHelper(dbpath, "cache", self.TABLE_PARAMS)
 
-    def h_rating(self, source, timestamp, artist_name, album_name, track_name, rating):
+    def h_in_rating(self, source, _ref, timestamp, artist_name, album_name, track_name, rating):
         """
         Caches the rating locally
         
-        This message is issued as a result of receving the "/Ratings/rating" DBus signal
+        This message is issued as a result of receiving the "/Ratings/rating" DBus signal
         """
         now=time.time()
         statement="""INSERT INTO cache (created, updated,
@@ -129,7 +126,8 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
     ## =============================================================================== EVENTS
     ## ===============================================================================
 
-    def t_ProcessMbid(self):
+
+    def t_processMbid(self):
         """
         Timer elapsed - Mbid processing
         """
@@ -139,7 +137,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         self.dbh.executeStatement(statement, self.BATCH_MBID_MAX)
         entries=self.dbh.fetchAllEx([])
         for entry in entries:
-            ref="syncplaylists:%s" % entry["id"]
+            ref="musync:%s" % entry["id"]
             self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"])
         
 

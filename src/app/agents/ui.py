@@ -208,6 +208,9 @@ class UiAgent(UiAgentBase):
         """
         self.counters["requests"] += 1
         self.something_was_updated=True
+    
+    def h_in_qratings(self, *_):
+        self.h_in_qrating()
         
     def h_out_rating(self, *_):
         """
@@ -216,6 +219,7 @@ class UiAgent(UiAgentBase):
         self.counters["answers"] += 1
         self.something_was_updated=True
 
+    
     def h_in_rating(self, *_):
         """
         An application updates a rating

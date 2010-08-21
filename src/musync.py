@@ -40,7 +40,9 @@ from app.system import mswitch #@UnusedImport
 ### Agents which require configuration
 ###
 from app.agents.notifier import NotifierAgent
-import app.agents.ratings_dbus #@UnusedImport
+import app.agents.ratings_dbus  #@UnusedImport
+import app.agents.ratings_cache #@UnusedImport
+import app.agents.mb_dbus       #@UnusedImport
 
 from app.agents.tray import TrayAgent
 _ta=TrayAgent(APP_NAME, ICON_PATH, ICON_FILE, HELP_URL)

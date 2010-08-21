@@ -10,6 +10,7 @@
     Messages Generated:
     - "in_rating"
     - "in_qrating"
+    - "in_qratings"
     
     ==========================================================
     
