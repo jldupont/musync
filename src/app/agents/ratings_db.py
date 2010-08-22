@@ -55,20 +55,28 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         statement="""UPDATE %s SET updated=?, rating=?
                     WHERE artist_name=? AND album_name=? AND track_name=?
                     """ % self.dbh.table_name
-        self.dbh.executeStatement(statement, now, rating, artist_name, album_name, track_name)
-        self.dbh.commit()
-        c=self.dbh.rowCount()
-        if c==1:  ## success
-            return
-        
+        try:
+            self.dbh.executeStatement(statement, now, rating, artist_name, album_name, track_name)
+            self.dbh.commit()
+            c=self.dbh.rowCount()
+            if c==1:  ## success
+                self.dprint("db: updated, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
+                return
+        except Exception,e:
+            self.pub("llog", "fpath/db", "error", "Database update error (%s)" % e)
+
+
         statement=""" INSERT INTO %s ( created, updated, source, 
                                         artist_name, album_name, track_name,
                                         rating)
                                 VALUES( ?, ?, ?, ?, ?, ?, ?)
                 """ % self.dbh.table_name
-        self.dbh.executeStatement(statement, now, now, source, artist_name, album_name, track_name, rating)
-        self.dbh.commit()
-        
+        try:
+            self.dbh.executeStatement(statement, now, now, source, artist_name, album_name, track_name, rating)
+            self.dbh.commit()
+            self.dprint("db: inserted, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
+        except Exception,e:
+            self.pub("llog", "fpath/db", "error", "Database insertion error (%s)" % e)
 
     def h_in_qrating(self, source, ref, artist_name, album_name, track_name):
         """
@@ -76,15 +84,18 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         """
         statement="""SELECT * FROM %s WHERE artist_name=? AND album_name=? AND track_name=? LIMIT 1
                     """ % self.dbh.table_name
-        self.dbh.executeStatement(statement, artist_name, album_name, track_name)
-        result=self.dbh.fetchOneEx2()
-        self.pub("out_rating", result["source"], 
-                                ref, 
-                                result["updated"], 
-                                result["artist_name"], 
-                                result["album_name"], 
-                                result["track_name"], 
-                                result["rating"])
+        try:
+            self.dbh.executeStatement(statement, artist_name, album_name, track_name)
+            result=self.dbh.fetchOneEx2()
+            self.pub("out_rating", result["source"], 
+                                    ref, 
+                                    result["updated"], 
+                                    result["artist_name"], 
+                                    result["album_name"], 
+                                    result["track_name"], 
+                                    result["rating"])
+        except Exception,e:
+            self.pub("llog", "fpath/db", "error", "Database reading error (%s)" % e)
         
     def h_in_qratings(self, source, ref, timestamp, count):
         """
@@ -95,25 +106,27 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         
         statement="""SELECT * FROM %s WHERE updated<=? ORDER DESC LIMIT %s
                 """ % (self.dbh.table_name, c)
-        self.dbh.executeStatement(statement, u)
-        results=self.dbh.fetchAllEx(None)
-        if results is None:
-            self.pub("out_rating", source, 
-                                    ref, 
-                                    timestamp, 
-                                    "", "", "", 0.0) 
-            return
-        
-        ### Burst....
-        for result in results:
-                self.pub("out_rating", result["source"], 
-                            ref, 
-                            result["updated"], 
-                            result["artist_name"], 
-                            result["album_name"], 
-                            result["track_name"], 
-                            result["rating"])
-
+        try:
+            self.dbh.executeStatement(statement, u)
+            results=self.dbh.fetchAllEx(None)
+            if results is None:
+                self.pub("out_rating", source, 
+                                        ref, 
+                                        timestamp, 
+                                        "", "", "", 0.0) 
+                return
+            
+            ### Burst....
+            for result in results:
+                    self.pub("out_rating", result["source"], 
+                                ref, 
+                                result["updated"], 
+                                result["artist_name"], 
+                                result["album_name"], 
+                                result["track_name"], 
+                                result["rating"])
+        except Exception,e:
+            self.pub("llog", "fpath/db", "error", "Database reading error (%s)" % e)
 
         
 
@@ -124,8 +137,12 @@ class RatingsDbAgent(AgentThreadedWithEvents):
     ## ====================================================================== TIMERS
     ##
     def t_announceUpdated(self):
-        e=self.getLatestUpdated()
-        try:    updated=e["updated"]
+        """
+        If there is an issue here it will be caught elsewhere anyhow
+        """
+        try:
+            e=self.getLatestUpdated()    
+            updated=e["updated"]
         except: updated=None
         
         self.pub("out_updated", updated, self.current_count)
@@ -133,8 +150,11 @@ class RatingsDbAgent(AgentThreadedWithEvents):
     def t_announceDbCount(self, *_):
         """
         Announces the count of "ratings" in the db
+        
+        If there is an issue here it will be caught elsewhere anyhow
         """
-        self.current_count=self.dbh.getRowCount()
+        try:     self.current_count=self.dbh.getRowCount()
+        except:  self.current_count=0
         self.pub("ratings_count", self.current_count)
 
         
