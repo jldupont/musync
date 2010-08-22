@@ -67,10 +67,8 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             self.dbh.executeStatement(statement, timestamp, rating, 
                                       artist_name, album_name, track_name)
             self.dbh.commit()
-            
-            
         except Exception,e:
-            self.pub("log", "error", "%s: error writing to database for inserting a rating (%s)" % (self.__class__, e))
+            self.pub("llog", "fpath/cache", "error", "Database insertion error (%s)" % e)
             return
 
         rc=self.dbh.rowCount()
@@ -91,11 +89,11 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                 self.dbh.executeStatement(statement, now, timestamp, 
                                           artist_name, album_name, track_name, "", rating)
                 self.dbh.commit()
-                
-                self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
             except Exception,e:
-                self.pub("log", "error", "%s: error writing to database for inserting a rating (%s)" % (self.__class__, e))
+                self.pub("llog", "fpath/cache", "error", "Database insertion error (%s)" % e)
+                return
 
+            self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
     def _updateMbid(self, artist_name, track_name, track_mbid):
         """
         Updates the track_mbid parameter of specified tracks
@@ -103,8 +101,11 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         statement="""UPDATE %s SET 
                     track_mbid=?
                     WHERE artist_name=? AND track_name=?""" % self.dbh.table_name
-        self.dbh.executeStatement(statement, track_mbid, artist_name, track_name)
-        self.dbh.commit()
+        try:
+            self.dbh.executeStatement(statement, track_mbid, artist_name, track_name)
+            self.dbh.commit()
+        except Exception,e:
+            self.pub("llog", "fpath/cache", "error", "Database update error (%s)" % e)
 
     ## ===============================================================================
     ## =============================================================================== HANDLERS
@@ -116,16 +117,23 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         
         If this fails, no matter: it will be caught & retried later
         """
-        self.dbh.deleteById(id)
-        self.dbh.commit()
+        try:
+            self.dbh.deleteById(id)
+            self.dbh.commit()
+        except:
+            pass
 
     def hq_next_to_upload(self, limit):
         """
         Returns the next entry to upload
         """
-        statement="""SELECT * from %s ORDER BY updated ASC LIMIT ?""" % self.dbh.table_name
-        self.dbh.executeStatement(statement, limit)
-        entries=self.dbh.fetchAllEx()
+        try:
+            statement="""SELECT * from %s ORDER BY updated ASC LIMIT ?""" % self.dbh.table_name
+            self.dbh.executeStatement(statement, limit)
+            entries=self.dbh.fetchAllEx()
+        except Exception,e:
+            self.pub("llog", "fpath/cache", "error", "Database reading error (%s)" % e)
+            return
         
         self.pub("to_upload", entries)
 
@@ -143,7 +151,8 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                 track_mbid=track_details["track_mbid"]
                 self._updateMbid(artist_name, track_name, track_mbid)
         except Exception,e:
-            self.pub("llog", "err", "error", "RatingsCache: problem updating 'track_mbid' (%s)" % e)
+            self.pub("llog", "fpath/cache", "error", "RatingsCache: problem updating 'track_mbid' (%s)" % e)
+            
     ## ===============================================================================
     ## =============================================================================== EVENTS
     ## ===============================================================================
@@ -156,8 +165,13 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         statement="""SELECT * FROM %s
                     WHERE track_mbid='' LIMIT ?""" % self.dbh.table_name
 
-        self.dbh.executeStatement(statement, self.BATCH_MBID_MAX)
-        entries=self.dbh.fetchAllEx([])
+        try:
+            self.dbh.executeStatement(statement, self.BATCH_MBID_MAX)
+            entries=self.dbh.fetchAllEx([])
+        except Exception,e:
+            self.pub("llog", "fpath/cache", "error", "Database reading error (%s)" % e)
+            return
+            
         for entry in entries:
             ref="musync:%s" % entry["id"]
             self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"], "low")
