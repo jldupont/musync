@@ -30,7 +30,7 @@
             
             Rating signals received with out-dated timestamp are discarded.
 
-    * (IN) qratings(source, ref, timestamp, count)
+    * (IN) qratings(ref, timestamp, count)
     
             Ratings? from 'timestamp' and descending in time, return a maximum of 'count' records
             
@@ -41,7 +41,7 @@
             
             The response will come in form of "rating" signal(s).
             
-    * (IN) qrating(artist_name, album_name, track_name)
+    * (IN) qrating(ref, artist_name, album_name, track_name)
     
             Rating?  Question signal for which Sync-Playlists will retrieve, if available,
             the rating associated with the specified track.  Sync-Playlists will reply
@@ -116,14 +116,15 @@ class RatingsSignalRx(dbus.service.Object):
         
     ## ==========================================================================================
     ## SIGNAL RECEIVERS
-    def rx_qratings(self, source, ref, timestamp, count):
-        mswitch.publish(self, "in_qratings", source, ref, timestamp, count)
+    def rx_qratings(self, ref, timestamp, count):
+        mswitch.publish(self, "in_qratings", ref, timestamp, count)
+
+    def rx_qrating(self, ref, artist_name, album_name, track_name):
+        mswitch.publish(self, "in_qrating", artist_name, album_name, track_name)
 
     def rx_rating(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         mswitch.publish(self, "in_rating", source, ref, timestamp, artist_name, album_name, track_name, rating)
 
-    def rx_qrating(self, source, ref, artist_name, album_name, track_name):
-        mswitch.publish(self, "in_qrating", artist_name, album_name, track_name)
 
 
 

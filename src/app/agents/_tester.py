@@ -17,16 +17,10 @@ class TesterAgent(AgentThreadedWithEvents):
         AgentThreadedWithEvents.__init__(self)
         
     def t_sec(self, *_):
-        #print "t_sec"
-        self.pub("llog", "fpath/test", "warning", "t_sec1")
-        self.pub("llog", "fpath/test", "warning", "t_sec2")
-        self.pub("llog", "fpath/test", "warning", "t_sec3")
+        pass
         
     def t_min(self, *_):
-
-        self.pub("llog", "fpath/test", "warning", "t_min1")
-        self.pub("llog", "fpath/test", "warning", "t_min2")
-        self.pub("llog", "fpath/test", "warning", "t_min3")
+        pass
         
         
 _=TesterAgent()
