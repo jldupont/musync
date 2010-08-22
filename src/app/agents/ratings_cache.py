@@ -11,6 +11,7 @@
     ===================
     - "in_rating"
     - "rating_uploaded"
+    - "to_update" : received from 'ratings_db' once an entry has been cleared for upload
         
     Messages Emitted:
     =================
@@ -54,12 +55,11 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
 
         self.dbh=DbHelper(dbpath, "ratings_cache", self.TABLE_PARAMS)
 
-    def h_in_rating(self, source, _ref, timestamp, artist_name, album_name, track_name, rating):
+    def h_to_update(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         """
-        Caches the rating locally
-        
-        This message is issued as a result of receiving the "/Ratings/rating" DBus signal
+        Caches the rating locally once the database has determine it is OK to do so
         """
+            
         now=time.time()        
         statement="""UPDATE %s SET updated=?, rating=? 
                     WHERE artist_name=? AND album_name=? AND track_name=?""" % self.dbh.table_name
@@ -94,6 +94,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                 return
 
             self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
+                
     def _updateMbid(self, artist_name, track_name, track_mbid):
         """
         Updates the track_mbid parameter of specified tracks

@@ -6,7 +6,8 @@
     - "in_rating":    store the entry in the db
     - "in_qrating":   returns the associated rating
     - "in_qratings":  returns the ratings list starting from "timestamp" and DESCending up to LIMIT
-        
+    - "to_update" : if the database determines that no record / new update
+            
     Created on 2010-08-19
     @author: jldupont
 """
@@ -49,34 +50,53 @@ class RatingsDbAgent(AgentThreadedWithEvents):
     def h_in_rating(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         """
         From Dbus "rating"
+        
+        First check if we have a different value in the database - if not, abort.
         """
-        now=time.time()
-        ### First try to update if possible
-        statement="""UPDATE %s SET updated=?, rating=?
-                    WHERE artist_name=? AND album_name=? AND track_name=?
+        statement="""SELECT * FROM %s WHERE artist_name=? AND album_name=? AND track_name=? AND rating<>? LIMIT 1
                     """ % self.dbh.table_name
         try:
-            self.dbh.executeStatement(statement, now, rating, artist_name, album_name, track_name)
-            self.dbh.commit()
-            c=self.dbh.rowCount()
-            if c==1:  ## success
-                self.dprint("db: updated, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
+            self.dbh.executeStatement(statement, artist_name, album_name, track_name, rating)
+            result=self.dbh.fetchOne(None)
+        except Exception,e:
+            self.pub("llog", "fpath/cache", "error", "Database reading error (%s)" % e)
+            return
+
+        ### Can't be found OR different rating... then add to the database AND signal
+        ###  so that the 'cache' also put to record ready for uploading to the web-service
+        if result is None:
+            now=time.time()
+            ### First try to update if possible
+            statement="""UPDATE %s SET updated=?, rating=?
+                        WHERE artist_name=? AND album_name=? AND track_name=?
+                        """ % self.dbh.table_name
+            try:
+                self.dbh.executeStatement(statement, now, rating, artist_name, album_name, track_name)
+                self.dbh.commit()
+                c=self.dbh.rowCount()
+                if c==1:  ## success
+                    self.dprint("db: updated, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
+                    return
+            except Exception,e:
+                self.pub("llog", "fpath/db", "error", "Database update error (%s)" % e)
                 return
-        except Exception,e:
-            self.pub("llog", "fpath/db", "error", "Database update error (%s)" % e)
+    
+            statement=""" INSERT INTO %s ( created, updated, source, 
+                                            artist_name, album_name, track_name,
+                                            rating)
+                                    VALUES( ?, ?, ?, ?, ?, ?, ?)
+                    """ % self.dbh.table_name
+            try:
+                self.dbh.executeStatement(statement, now, now, source, artist_name, album_name, track_name, rating)
+                self.dbh.commit()
+                self.dprint("db: inserted, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
+            except Exception,e:
+                self.pub("llog", "fpath/db", "error", "Database insertion error (%s)" % e)
+                return
+            
+            ### help the cache - the way to the web-service
+            self.pub("to_update", source, ref, timestamp, artist_name, album_name, track_name, rating)
 
-
-        statement=""" INSERT INTO %s ( created, updated, source, 
-                                        artist_name, album_name, track_name,
-                                        rating)
-                                VALUES( ?, ?, ?, ?, ?, ?, ?)
-                """ % self.dbh.table_name
-        try:
-            self.dbh.executeStatement(statement, now, now, source, artist_name, album_name, track_name, rating)
-            self.dbh.commit()
-            self.dprint("db: inserted, a(%s) b(%s) t(%s): %s" % (artist_name, album_name, track_name, rating))
-        except Exception,e:
-            self.pub("llog", "fpath/db", "error", "Database insertion error (%s)" % e)
 
     def h_in_qrating(self, source, ref, artist_name, album_name, track_name):
         """
