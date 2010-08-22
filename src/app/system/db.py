@@ -143,7 +143,7 @@ class DbHelper(object):
                 data=self.makeDict(entry)
                 result.append(data)
         except:
-            result=self.makeEmptyDict()
+            result=[self.makeEmptyDict()]
         return result
 
     def getPage(self, limit=100):

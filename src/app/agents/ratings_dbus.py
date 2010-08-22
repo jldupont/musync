@@ -28,7 +28,8 @@
             @param track_name: (string)
             @param rating: (integer) [0:100]
             
-            Rating signals received with out-dated timestamp are discarded.
+            This signal can be sent with 'artist_name', 'album_name', 'track_name' equal to "" (empty)
+            in response to "qratings" returning no results.
 
     * (IN) qratings(source, ref, timestamp, count)
     
@@ -40,6 +41,7 @@
             @param count: (integer) the maximum number records to return
             
             The response will come in form of "rating" signal(s).
+            When using 'timestamp=0', the current time is used i.e. latest entries will be returned.
             
     * (IN) qrating(source, ref, artist_name, album_name, track_name)
     

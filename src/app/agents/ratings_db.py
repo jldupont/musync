@@ -96,7 +96,25 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         statement="""SELECT * FROM %s WHERE updated<=? ORDER DESC LIMIT %s
                 """ % (self.dbh.table_name, c)
         self.dbh.executeStatement(statement, u)
-        result=self.dbh.fetchAllEx2()
+        results=self.dbh.fetchAllEx(None)
+        if results is None:
+            self.pub("out_rating", source, 
+                                    ref, 
+                                    timestamp, 
+                                    "", "", "", 0.0) 
+            return
+        
+        ### Burst....
+        for result in results:
+                self.pub("out_rating", result["source"], 
+                            ref, 
+                            result["updated"], 
+                            result["artist_name"], 
+                            result["album_name"], 
+                            result["track_name"], 
+                            result["rating"])
+
+
         
 
     ## ====================================================================== HELPERS
