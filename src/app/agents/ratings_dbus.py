@@ -30,23 +30,23 @@
             
             Rating signals received with out-dated timestamp are discarded.
 
-    * (IN) qratings(ref, timestamp, count)
+    * (IN) qratings(source, ref, timestamp, count)
     
             Ratings? from 'timestamp' and descending in time, return a maximum of 'count' records
             
-            @param source: (string) the 'source' application
+            @param source: (string) the 'source' application - filter out entries from this origin
             @param ref: (string) an opaque reference parameter to pass in the response 'rating' signal
             @param timestamp: (integer) the in seconds since the epoch, in UTC
             @param count: (integer) the maximum number records to return
             
             The response will come in form of "rating" signal(s).
             
-    * (IN) qrating(ref, artist_name, album_name, track_name)
+    * (IN) qrating(source, ref, artist_name, album_name, track_name)
     
-            Rating?  Question signal for which Sync-Playlists will retrieve, if available,
-            the rating associated with the specified track.  Sync-Playlists will reply
+            Rating?  Question signal for which Musync will retrieve, if available,
+            the rating associated with the specified track.  Musync will reply
             using the "rating" signal (described above).
-
+            
     * (OUT) updated(timestamp, ratings_count)
     
             Signal indicating when was the last update performed on the local database
@@ -116,11 +116,11 @@ class RatingsSignalRx(dbus.service.Object):
         
     ## ==========================================================================================
     ## SIGNAL RECEIVERS
-    def rx_qratings(self, ref, timestamp, count):
-        mswitch.publish(self, "in_qratings", ref, timestamp, count)
+    def rx_qratings(self, source, ref, timestamp, count):
+        mswitch.publish(self, "in_qratings", source, ref, timestamp, count)
 
-    def rx_qrating(self, ref, artist_name, album_name, track_name):
-        mswitch.publish(self, "in_qrating", artist_name, album_name, track_name)
+    def rx_qrating(self, source, ref, artist_name, album_name, track_name):
+        mswitch.publish(self, "in_qrating", source, ref, artist_name, album_name, track_name)
 
     def rx_rating(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         mswitch.publish(self, "in_rating", source, ref, timestamp, artist_name, album_name, track_name, rating)

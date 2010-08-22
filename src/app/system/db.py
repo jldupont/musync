@@ -4,6 +4,7 @@
     Created on 2010-08-19
     @author: jldupont
 """
+import copy
 import os
 import sqlite3
 
@@ -16,12 +17,14 @@ class DbHelper(object):
         self.table_name=table_name
         self.table_params=table_params
         self.fields=[]
+        self.emptyDicTemplate={}
         
         self.path=os.path.expanduser(self.dbpath)
         self.conn=sqlite3.connect(self.path, check_same_thread=False)
         self.c = self.conn.cursor()
 
         self._prepare()
+        self._prepareEmptyDict()
         self._executeCreate()
         
 
@@ -56,6 +59,23 @@ class DbHelper(object):
             index += 1
         return dic
         
+    def makeEmptyDict(self):
+        return copy.deepcopy(self.emptyDicTemplate)
+        
+    def _prepareEmptyDict(self):
+        """ Prepares an empty result dictionary
+        """
+        for col_name, col_type in self.table_params:
+            if col_type=="text":
+                self.emptyDicTemplate[col_name]=""
+            else:
+                if col_type=="integer":
+                    self.emptyDicTemplate[col_name]=0
+                else:
+                    if col_type=="float":
+                        self.emptyDicTemplate[col_name]=0.0
+                
+                
 
     def deleteById(self, id):
         self.c.execute("""DELETE * FROM %s 
@@ -95,6 +115,14 @@ class DbHelper(object):
         except:
             data=default
         return data
+
+    def fetchOneEx2(self):
+        try:
+            entry=self.fetchOne()
+            data=self.makeDict(entry)
+        except:
+            data=self.makeEmptyDict()
+        return data
     
     def fetchAllEx(self, default=None):
         result=[]
@@ -105,6 +133,17 @@ class DbHelper(object):
                 result.append(data)
         except:
             result=default
+        return result
+
+    def fetchAllEx2(self):
+        result=[]
+        try:
+            entries=self.fetchAll()
+            for entry in entries:
+                data=self.makeDict(entry)
+                result.append(data)
+        except:
+            result=self.makeEmptyDict()
         return result
 
     def getPage(self, limit=100):
