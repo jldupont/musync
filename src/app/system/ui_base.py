@@ -29,7 +29,7 @@ class UiAgentBase(object):
 
         self.iq=Queue()
         self.isq=Queue()
-        mswitch.subscribe(self.iq, self.isq)
+        mswitch.subscribe("__main__", self.iq, self.isq)
 
         self.tick_count=0
         self.sec_count=0

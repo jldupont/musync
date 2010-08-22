@@ -8,6 +8,7 @@
     @author: jldupont
     @date: May 17, 2010
     @revised: June 18, 2010
+    @revised: August 22, 2010 : filtered-out "send to self" case
 """
 
 from threading import Thread
@@ -26,7 +27,7 @@ def mdispatch(obj, obj_orig, envelope):
     Dispatches a message to the target
     handler inside a class instance
     """
-    mtype, payload = envelope
+    _orig, mtype, payload = envelope
     orig, msg, pargs, kargs = payload
     
     ## Avoid sending to self
@@ -93,7 +94,7 @@ class AgentThreadedBase(Thread):
         
         ## subscribe this agent to all
         ## the messages of the switch
-        mswitch.subscribe(self.iq, self.isq)
+        mswitch.subscribe(self.id, self.iq, self.isq)
         
         quit=False
         while not quit:
@@ -127,7 +128,7 @@ class AgentThreadedBase(Thread):
         print "Agent(%s) ending" % str(self.__class__)
                 
     def _process(self, envelope):
-        mtype, _payload = envelope
+        _orig, mtype, _payload = envelope
         
         #if mtype!="tick":
         #    print "base._process: mtype: " + str(mtype)

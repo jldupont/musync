@@ -156,15 +156,17 @@ class RatingsDbAgent(AgentThreadedWithEvents):
 
     ## ====================================================================== TIMERS
     ##
-    def t_announceUpdated(self):
+    def t_announceUpdated(self, *_):
         """
         If there is an issue here it will be caught elsewhere anyhow
         """
         try:
             e=self.getLatestUpdated()    
             updated=e["updated"]
-        except: updated=None
+        except: 
+            updated=0
         
+        self.dprint("* out_updated: updated(%s) current count(%s)" % (updated, self.current_count))
         self.pub("out_updated", updated, self.current_count)
 
     def t_announceDbCount(self, *_):
@@ -175,6 +177,8 @@ class RatingsDbAgent(AgentThreadedWithEvents):
         """
         try:     self.current_count=self.dbh.getRowCount()
         except:  self.current_count=0
+        
+        self.dprint("* ratings_count: current count(%s)" % self.current_count)
         self.pub("ratings_count", self.current_count)
 
         
