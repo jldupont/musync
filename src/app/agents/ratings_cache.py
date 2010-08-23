@@ -34,7 +34,7 @@ __all__=["RatingsCacheAgent",]
 class RatingsCacheAgent(AgentThreadedWithEvents):
     
     TIMERS_SPEC=[ ("min", 1, "t_processMbid")
-                 #,("sec", 10, "t_countRatings")
+                 ,("min", 1, "t_processDetectMb")
                  ]
 
     TABLE_PARAMS=[("id",           "integer primary key")
@@ -48,13 +48,17 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                   ,("rating",      "float")
                   ]
     
-    BATCH_MBID_MAX=50
+    BATCH_MBID_MAX=200
+    MB_DETECT_GONE_THRESHOLD=3 ## minutes
     
     def __init__(self, dbpath, dev_mode=False):
         AgentThreadedWithEvents.__init__(self)
-
+        self.mb_minutes_since_last_saw=0
+        self.mb_present=False
+        
         self.dbh=DbHelper(dbpath, "ratings_cache", self.TABLE_PARAMS)
-
+        
+    #source, ref, timestamp, artist_name, album_name, track_name, rating)
     def h_to_update(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         """
         Caches the rating locally once the database has determine it is OK to do so
@@ -69,6 +73,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             self.dbh.commit()
         except Exception,e:
             self.pub("llog", "fpath/cache", "error", "Database insertion error (%s)" % e)
+            self.dprint("cache: update error: %s" % e)
             return
 
         rc=self.dbh.rowCount()
@@ -84,13 +89,14 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                                 track_name,
                                 track_mbid,
                                 rating) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?)""" % self.dbh.table_name
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""" % self.dbh.table_name
             try:
-                self.dbh.executeStatement(statement, now, timestamp, 
+                self.dbh.executeStatement(statement, now, timestamp, source,
                                           artist_name, album_name, track_name, "", rating)
                 self.dbh.commit()
             except Exception,e:
                 self.pub("llog", "fpath/cache", "error", "Database insertion error (%s)" % e)
+                self.dprint("cache: insertion error: %s" % e)
                 return
 
             self.dprint("! rating inserted in cache: artist(%s) album(%s) track(%s) rating(%s)" % (artist_name, album_name, track_name, rating))
@@ -141,9 +147,15 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
     def h_mb_tracks(self, _source, ref, list_dic):
         """
         Update the mbid fields of the entries
+        
+        We only get the response(s) to the question(s) we have asked.
+        The other 'tracks' messages flying on Dbus are filtered-out at the Dbus Agent
         """
         if list_dic is None:
             return
+        
+        self.mb_present=True
+        self.mb_minutes_since_last_saw=0
         
         try:
             for track_details in list_dic:
@@ -177,6 +189,13 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             ref="musync:%s" % entry["id"]
             self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"], "low")
         
+
+    def t_processDetectMb(self, *_):
+        """
+        """
+        self.mb_minutes_since_last_saw += 1
+        if self.mb_minutes_since_last_saw > self.MB_DETECT_GONE_THRESHOLD:
+            self.mb_present=False
 
 """        
 _=RatingsCacheAgent(DBPATH)

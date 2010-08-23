@@ -15,7 +15,7 @@ from threading import Thread
 from Queue import Queue, Empty
 
 __all__=["publish", "subscribe", "observe_mode"]
-FILTER_OUT=["__tick__", "log", "llog"]
+OSBSERVE_FILTER_OUT=["__tick__", "log", "llog"]
             
 observe_mode=False
 
@@ -143,7 +143,7 @@ class BasicSwitch(Thread):
             if interest==True or interest==None:
 
                 if observe_mode:
-                    if mtype not in FILTER_OUT:
+                    if mtype not in OSBSERVE_FILTER_OUT:
                         print "<<< do_pub: interest(%s) mtype(%s) q(%s) sq(%s)" % (interest, mtype, q, sq)
                 
                 if mtype.startswith("__"):

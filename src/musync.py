@@ -14,8 +14,10 @@ HELP_URL="http://www.systemical.com/doc/opensource/"+APP_NAME
 TIME_BASE=250  ##milliseconds
 TICKS_SECOND=1000/TIME_BASE
 
-MSWITCH_OBSERVE_MODE=True
+###<<< DEVELOPMENT MODE SWITCHES
+MSWITCH_OBSERVE_MODE=False
 DEV_MODE=True
+###>>>
        
 import os
 import sys
