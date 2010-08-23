@@ -143,6 +143,7 @@ def message_processor(src_agent, agent_name, agent_id, interest_map, responsesIn
         shutdown_handler=getattr(src_agent, "h_shutdown", None)
         if shutdown_handler is not None:
             shutdown_handler()
+        return True
 
     ## not much more to do here...
     ## but shouldn't happen anyhow!!! #paranoia...
