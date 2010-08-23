@@ -9,7 +9,7 @@
 import gtk
 from Queue import Queue, Empty
 from app.system import mswitch
-from app.system.base import mdispatch
+from app.system.base import process_queues, message_processor
 
 __all__=["UiAgentBase"]
 
@@ -38,6 +38,10 @@ class UiAgentBase(object):
         self.day_count=0
 
         self.window=None
+        
+        self.interests={}
+        self.responsesInterests=[]
+        
         
     def h_app_show(self, *_):
         """ We should show the main application window
@@ -101,6 +105,17 @@ class UiAgentBase(object):
                         tick_second, tick_min, tick_hour, tick_day, 
                         self.sec_count, self.min_count, self.hour_count, self.day_count)
         
+        #(src_agent, agent_name, agent_id, 
+        #  interest_map, responsesInterestList, 
+        #  iq, isq, processor, low_priority_burst_size=5)
+        quit=process_queues(self, "__main__", "__main__", 
+                       self.interests, self.responsesInterests,
+                       self.iq, self.isq, message_processor 
+                       )
+        if quit:
+            self.on_destroy()
+            
+        """
         while True:
             try:     
                 envelope=self.isq.get(False)
@@ -134,5 +149,6 @@ class UiAgentBase(object):
                 break
             
             continue
-
+        """
+        ## for gobject... just in case
         return True
