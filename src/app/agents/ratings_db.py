@@ -21,8 +21,8 @@ class RatingsDbAgent(AgentThreadedWithEvents):
     
     MAX_RETRIEVE_LIMIT=1000
     
-    TIMERS_SPEC=[ ("min", 1, "t_announceDbCount")
-                 ,("min", 1, "t_announceUpdated")  
+    TIMERS_SPEC=[ #("min", 1, "t_announceDbCount")
+                 ("min", 1, "t_announceUpdated")  
                  #,("sec", 10, "t_countRatings")
                  ]
 

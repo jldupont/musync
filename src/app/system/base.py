@@ -129,11 +129,11 @@ def process_queues(src_agent, agent_name, agent_id, interest_map, responsesInter
 def message_processor(src_agent, agent_name, agent_id, interest_map, responsesInterestList, iq, isq, envelope):
     """
     Processes 1 message envelope
+    
+    Used in conjunction with 'process_queues'
     """
     orig, mtype, _payload = envelope
     
-    #if mtype!="tick":
-    #    print "base._process: mtype: " + str(mtype)
     interested=interest_map.get(mtype, None)
     if interested==False:
         return False
@@ -150,17 +150,10 @@ def message_processor(src_agent, agent_name, agent_id, interest_map, responsesIn
     if handled is None:
         return
 
-    #interestFirstTimeNoted=interest_map.get(mtype, None)
-    #if interestFirstTimeNoted is None:
-    #    print "Agent(%s) mtype(%s) interested(%s) snooping(%s)" % (self.__class__, mtype, handled, snooping)
-    #    print "Agent(%s) map: %s" % (self.__class__, self.mmap)
-
-    ### signal this Agent's interest status (True/False)
-    ### to the central message switch
     if interested is None:
         if mtype!="__quit__":
             if mtype not in responsesInterestList:
-                mswitch.publish(agent_id, "__interest__",agent_name, mtype, handled, snooping, iq, isq)
+                mswitch.publish(agent_id, "__interest__", agent_name, agent_id, mtype, handled, snooping, iq, isq)
                 responsesInterestList.append(mtype)
 
                 ## stop sending to self definitely
@@ -170,11 +163,6 @@ def message_processor(src_agent, agent_name, agent_id, interest_map, responsesIn
                 print "+++ interest msg-orig(%s) target(%s) mtype(%s): (%s)" % (orig, agent_name, mtype, handled)
                 interest_map[mtype]=handled
         
-    ### This debug info is extermely low overhead... keep it.
-    #if interested is None and handled:
-    #    print "Agent(%s) interested(%s) snooping(%s)" % (self.__class__, mtype, snooping)
-    #    print "Agent(%s) map: %s" % (self.__class__, self.mmap)
-
     return quit
 
 class AgentThreadedBase(Thread):
@@ -198,7 +186,7 @@ class AgentThreadedBase(Thread):
         
     def dprint(self, msg):
         if debug:
-            print "+ %s: %s" % (self.__class__, msg)
+            print "+ %s: %s" % (self.agent_name, msg)
         
     def pub(self, msgType, *pargs, **kargs):
         mswitch.publish(self.id, msgType, *pargs, **kargs)
@@ -207,10 +195,12 @@ class AgentThreadedBase(Thread):
         """
         Main Loop
         """
-        print "Agent(%s) starting" % self.agent_name
+        print "Agent(%s) (%s) starting" % (self.agent_name, self.id)
         
         ## subscribe this agent to all
-        ## the messages of the switch
+        ## the messages of the switch.
+        ## Later on when the agent starts receiving messages,
+        ## it will signal which 'message types' are of interest.
         mswitch.subscribe(self.id, self.iq, self.isq)
         
         quit=False
@@ -219,7 +209,7 @@ class AgentThreadedBase(Thread):
                                 self.mmap, self.responsesInterest,
                                 self.iq, self.isq, message_processor)
             
-        print "Agent(%s) ending" % str(self.__class__)
+        print "Agent(%s) (%s) ending" % (self.agent_name, self.id)
                 
             
 
@@ -405,7 +395,7 @@ class TickGenerator(object):
         
     def input(self):
         """
-        Performs message dispatch
+        Performs 'tick' dispatching
         """
         tick_min=False
         tick_hour=False
@@ -489,7 +479,7 @@ def custom_dispatch(source, q, pq, dispatcher, low_priority_burst_size=5):
         continue
     
 
-def dispatcher(src_obj, q, pq, low_priority_burst_size=5):
+def dispatcher(source, q, pq, low_priority_burst_size=5):
     """
     """
     while True:

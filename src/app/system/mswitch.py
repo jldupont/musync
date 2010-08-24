@@ -69,7 +69,7 @@ class BasicSwitch(Thread):
                     orig, mtype, payload=envelope
                     
                     if mtype=="__interest__":
-                        self.do_interest(orig, payload)
+                        self.do_interest(payload)
                     else:
                         self.do_pub(orig, mtype, payload)
                     ## We needed to give a chance to
@@ -113,14 +113,13 @@ class BasicSwitch(Thread):
         
         print "mswitch - shutdown"
         
-    def do_interest(self, source, args):
+    def do_interest(self, args):
         """
         Add a 'subscriber' for 'mtype' to the "interested" list
         """
-        
         payload, _kargs = args
-        agent_name, mtype, interest, snooping, _q, _iq = payload
-        self.imap[(source, mtype)]=(interest, snooping)
+        agent_name, agent_id, mtype, interest, snooping, _q, _iq = payload
+        self.imap[(agent_id, mtype)]=(interest, snooping)
         
         print ":::: do_interest: source(%s) mtype(%s) interest(%s) snooping(%s)" % (agent_name, mtype, interest, snooping)
                
