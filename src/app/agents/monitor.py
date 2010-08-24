@@ -33,10 +33,10 @@ class MonitoringAgent(AgentThreadedWithEvents):
     def __init__(self):
         AgentThreadedWithEvents.__init__(self)
         self.mb_detected=False
-        self.mb_last_seen=0
+
         self.counters={ "mb": 0
                        }
-        self.events={ "mb_detected": False
+        self.events={ "mb_detected": None
                      }
         
     def hs_mb_tracks(self):
@@ -44,15 +44,16 @@ class MonitoringAgent(AgentThreadedWithEvents):
         If we 'hear' this sort of message, that means
         Musicbrainz-proxy is up and running
         """
-        self.pub("mb_detected", True)
-        self.events["mb_detected"]=True
-        self.counters["mb"]=0
+        if self.events["mb_detected"]!=True:
+            self.pub("mb_detected", True)
+            self.events["mb_detected"]=True
+            self.counters["mb"]=0
         
     def t_checkMb(self, *_):
         """
         Apply some hysterisis
         """
-        if self.events["mb_detected"]!=False:
+        if self.events["mb_detected"]!=False or self.events["mb_detected"]==None:
             self.counters["mb"] += 1
             if self.counters["mb"] > self.THRESHOLDS["mb"]:
                 self.events["mb_detected"]=False
