@@ -75,6 +75,7 @@ _la.start()
 #_ca.start()
 
 from app.agents._tester import TesterAgent  #@UnusedImport
+import app.agents.monitor
 
 ### ===========================================================
 ###

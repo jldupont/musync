@@ -5,12 +5,13 @@
     * message bursting controlled
     * message dispatching based on Agent 'interest'
     * default handler: "h_default" , catch-all messages
+    * "snooping" handlers support: agent gets "envelopes" with only 'msgType'
     
     @author: jldupont
     @date: May 17, 2010
     @revised: June 18, 2010
     @revised: August 22, 2010 : filtered-out "send to self" case
-    @revised: August 23, 2010 : added "snooping mode"    
+    @revised: August 23, 2010 : added "snooping mode", remove another message loop, tidied-up    
 """
 
 from threading import Thread
@@ -82,12 +83,6 @@ def mdispatch(obj, this_source, envelope):
         else:
             handler(*pargs, **kargs)
 
-    """
-    if handler is None:
-        if debug:
-            print "! No handler for message-type: %s" % mtype
-    """
-    
     return (False, mtype, handled, snoopingHandler)
 
 
@@ -383,6 +378,14 @@ class AgentThreadedBridge(object):
 
 
 class TickGenerator(object):
+    """
+    Time base generator
+    
+    Issues a 'tick' message through a 'publisher' with parameters:
+    
+    'tick_second', 'tick_min', 'tick_hour' and 'tick_day'
+    whilst maintaining a count for each intervals
+    """
     def __init__(self, ticks_second, publisher):
         self.ticks_second=ticks_second
         self.publisher=publisher
@@ -448,6 +451,7 @@ def custom_dispatch(source, q, pq, dispatcher, low_priority_burst_size=5):
                 continue
             handled, snooping=dispatcher(mtype, *pargs)
             if handled==False:
+                ## low overhead - once per run
                 print "* '%s': not interest in '%s' message type" % (orig, mtype)
                 mswitch.publish(source, "__interest__", source, mtype, False, snooping, pq)
                 break
@@ -468,6 +472,7 @@ def custom_dispatch(source, q, pq, dispatcher, low_priority_burst_size=5):
                 continue
             handled, snooping=dispatcher(mtype, *pargs)
             if handled==False:
+                ## low overhead - once per run
                 print "* '%s': not interest in '%s' message type" % (orig, mtype)
                 mswitch.publish(source, "__interest__", source, mtype, False, snooping, q)
             burst -= 1
@@ -481,6 +486,7 @@ def custom_dispatch(source, q, pq, dispatcher, low_priority_burst_size=5):
 
 def dispatcher(source, q, pq, low_priority_burst_size=5):
     """
+    Message dispatcher
     """
     while True:
         try:     
@@ -493,6 +499,7 @@ def dispatcher(source, q, pq, low_priority_burst_size=5):
                 continue
             handled, snooping=dispatcher(mtype, *pargs)
             if handled==False:
+                ## low overhead - once per run
                 print "* '%s': not interest in '%s' message type" % (orig, mtype)
                 mswitch.publish(source, "__interest__", source, mtype, False, snooping, pq)
                 break
@@ -513,6 +520,7 @@ def dispatcher(source, q, pq, low_priority_burst_size=5):
                 continue
             handled, snooping=dispatcher(mtype, *pargs)
             if handled==False:
+                ## low overhead - once per run
                 print "* '%s': not interest in '%s' message type" % (orig, mtype)
                 mswitch.publish(source, "__interest__", source, mtype, False, snooping, q)
             burst -= 1

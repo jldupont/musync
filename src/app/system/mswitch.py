@@ -22,7 +22,7 @@ OBSERVE_FILTER_OUT_SOURCES=["__bridge__",]
             
 observe_mode=False
 
-class BasicSwitch(Thread):
+class CentralSwitch(Thread):
     """
     Simple message switch
     
@@ -143,13 +143,6 @@ class BasicSwitch(Thread):
             
             (interest,  snooping)=self.imap.get((sorig, mtype), (None, None))
             
-            """
-            if interest==False:
-                reported=self.rmap.get((q, mtype), None)
-                if reported is None:
-                    print "agent(%s) not interested mtype(%s)" % (str(q), mtype)
-                    self.rmap[(q, mtype)]=True
-            """
             if observe_mode:
                 if mtype not in OBSERVE_FILTER_OUT:
                     if orig not in OBSERVE_FILTER_OUT_SOURCES:
@@ -201,5 +194,5 @@ def subscribe(orig, q, sq, _msgType=None):
 
 
 
-_switch=BasicSwitch()
+_switch=CentralSwitch()
 _switch.start()

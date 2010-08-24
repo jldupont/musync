@@ -22,6 +22,8 @@ class TesterAgent(AgentThreadedWithEvents):
     def t_min(self, *_):
         pass
         
+    def h_mb_detected(self, state):
+        print ">>> Tester: mb_detected: %s" % state
         
 _=TesterAgent()
 _.start()
