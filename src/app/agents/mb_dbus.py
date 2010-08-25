@@ -24,6 +24,7 @@ class MBSignalRx(dbus.service.Object):
     def __init__(self, agent):
         dbus.service.Object.__init__(self, dbus.SessionBus(), self.PATH)
         self.agent=agent
+        self.mb_detected_count=0
         
         dbus.Bus().add_signal_receiver(self.sTracks,
                                        signal_name="Tracks",
@@ -46,6 +47,8 @@ class MBSignalRx(dbus.service.Object):
         except: ours=False
         if ours:
             mswitch.publish(self.agent, "mb_tracks", source, ref, list_dic)
+        self.mb_detected_count+=1
+            
 
 
 
@@ -66,6 +69,13 @@ class DbusAgent(AgentThreadedBase):
             return
     
         self.srx.qTrack(ref, artist, title, priority)
+        
+    def hq_mb_detected_count(self):
+        """
+        "mb_detected_count?"
+        """
+        self.pub("mb_detected_count", self.srx.mb_detected_count)
             
+
 _=DbusAgent()
 _.start()

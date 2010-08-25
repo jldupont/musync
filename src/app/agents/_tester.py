@@ -4,6 +4,7 @@
     Created on 2010-08-20
     @author: jldupont
 """
+import time
 from app.system.base import AgentThreadedWithEvents
 
 class TesterAgent(AgentThreadedWithEvents):
@@ -23,7 +24,7 @@ class TesterAgent(AgentThreadedWithEvents):
         pass
         
     def h_mb_detected(self, state):
-        print ">>> Tester: mb_detected: %s" % state
+        print "%s: >>> Tester: mb_detected: %s" % (time.time(), state)
         
 _=TesterAgent()
 _.start()
