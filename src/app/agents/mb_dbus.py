@@ -43,6 +43,9 @@ class MBSignalRx(dbus.service.Object):
         """
         DBus signal handler - /Tracks/Tracks
         """
+        #if source=="__heart__":
+        #    print "MB Heart: "+str(list_dic)
+        
         try:    ours=(ref.split(":")[0])=="musync"
         except: ours=False
         if ours:

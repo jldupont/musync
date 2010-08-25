@@ -43,8 +43,7 @@ class MonitoringAgent(AgentThreadedWithEvents):
         self.events={ "mb_detected": False
                      }
     def h_mb_detected_count(self, count):
-        print "h_mb_detected_count: "+str(count)
-        
+        #print "h_mb_detected_count: "+str(count)
         if self.counters["mb_detected_count"] != count:
             self.counters["mb_detected_count"]=count
             
