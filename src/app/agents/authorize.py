@@ -59,6 +59,10 @@ class AuthorizeAgent(AgentThreadedBase):
     CONSUMER_SECRET="PkyFMaAhcPacERXjRWFv1a/U"
     CALLBACK_URL = "oob"
     
+    REQUEST_TOKEN="oauth_request_token"
+    ACCESS_TOKEN="oauth_access_token"
+    VERIFICATION_CODE="oauth_verification_code"
+    
     def __init__(self, app_name):
         """
         @param interval: interval in seconds
@@ -84,6 +88,7 @@ class AuthorizeAgent(AgentThreadedBase):
             oauth_request = oauth.OAuthRequest.from_token_and_callback(token=self.token, 
                                                                        http_url=self.client.AUTHORIZATION_URL)
             url= oauth_request.to_url()
+            self.sm.save(self.REQUEST_TOKEN, self.token)
         except Exception,e:
             self.pub("error_requesttoken", e)
             self.pub("log", "warning", "Authorization: 'RequestToken' failed: "+str(e))
@@ -109,10 +114,15 @@ class AuthorizeAgent(AgentThreadedBase):
             oauth_request.sign_request(self.signature_method_hmac_sha1, self.consumer, self.token)
             self.atoken = self.client.fetch_access_token(oauth_request)
         except Exception,e:
+            self.atoken=None
             self.pub("oauth", None, None)
             self.pub("error_accesstoken", e)
             self.pub("log", "warning", "Verification: 'AccessToken' failed: "+str(e))
             return
+        finally:
+            self.sm.save(self.ACCESS_TOKEN, self.atoken)
+            self.sm.save(self.VERIFICATION_CODE, verificationCode)
+            
         
         key=self.atoken.key
         secret=self.atoken.secret
