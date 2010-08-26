@@ -7,6 +7,7 @@
     Messages Processed:
     - "start_authorize"
     - "start_verify"
+    - "oauth_error"
     
     Messages Generated:
     - "error_requesttoken"
@@ -129,6 +130,12 @@ class AuthorizeAgent(AgentThreadedBase):
         self.pub("oauth", key, secret)
         self.pub("log", "oauth: key: %s  secret: %s" % (key, secret))
 
+    def h_oauth_error(self, *_):
+        """
+        An oauth level error occured - reset access token
+        """
+        self.sm.save(self.ACCESS_TOKEN, "")
+        self.sm.save(self.VERIFICATION_CODE, "")
 
 """
 _=AuthorizeAgent()
