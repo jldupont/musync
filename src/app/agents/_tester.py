@@ -24,7 +24,8 @@ class TesterAgent(AgentThreadedWithEvents):
         pass
         
     def h_mb_detected(self, state):
-        print "%s: >>> Tester: mb_detected: %s" % (time.time(), state)
+        pass
+        #print "%s: >>> Tester: mb_detected: %s" % (time.time(), state)
         
 _=TesterAgent()
 _.start()

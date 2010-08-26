@@ -34,7 +34,7 @@ __all__=["RatingsCacheAgent",]
 class RatingsCacheAgent(AgentThreadedWithEvents):
     
     TIMERS_SPEC=[ ("min", 1, "t_processMbid")
-                 ,("min", 1, "t_processDetectMb")
+                 #,("min", 1, "t_processDetectMb")
                  ]
 
     TABLE_PARAMS=[("id",           "integer primary key")
@@ -49,12 +49,12 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                   ]
     
     BATCH_MBID_MAX=200
-    MB_DETECT_GONE_THRESHOLD=3 ## minutes
+    #MB_DETECT_GONE_THRESHOLD=3 ## minutes
     
     def __init__(self, dbpath, dev_mode=False):
         AgentThreadedWithEvents.__init__(self)
-        self.mb_minutes_since_last_saw=0
-        self.mb_present=False
+        #self.mb_minutes_since_last_saw=0
+        #self.mb_present=False
         
         self.dbh=DbHelper(dbpath, "ratings_cache", self.TABLE_PARAMS)
         
@@ -154,15 +154,19 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         if list_dic is None:
             return
         
-        self.mb_present=True
-        self.mb_minutes_since_last_saw=0
+        #print "--- ratings_cache.h_mb_tracks: ref: %s, list_dic: %s" % (ref, list_dic)
         
         try:
             for track_details in list_dic:
                 artist_name=track_details["artist_name"]
+                #album_name=track_details["album_name"]
                 track_name=track_details["track_name"]
                 track_mbid=track_details["track_mbid"]
+                if track_mbid=="":
+                    track_mbid="?"
+                    self.pub("log", "Track Mbid not found: artist(%s) title(%s)" % (artist_name, track_name))
                 self._updateMbid(artist_name, track_name, track_mbid)
+                print "Track updated: artist(%s) album(%s) title(%s)" % (artist_name, track_name)
         except Exception,e:
             self.pub("llog", "fpath/cache", "error", "RatingsCache: problem updating 'track_mbid' (%s)" % e)
             
@@ -189,14 +193,14 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             ref="musync:%s" % entry["id"]
             self.pub("mb_track?", ref, entry["artist_name"], entry["track_name"], "low")
         
-
+    """
     def t_processDetectMb(self, *_):
-        """
-        """
         self.mb_minutes_since_last_saw += 1
         if self.mb_minutes_since_last_saw > self.MB_DETECT_GONE_THRESHOLD:
             self.mb_present=False
-
+    """
+    
+    
 """        
 _=RatingsCacheAgent(DBPATH)
 _.start()

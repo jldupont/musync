@@ -49,6 +49,7 @@ class MBSignalRx(dbus.service.Object):
         try:    ours=(ref.split(":")[0])=="musync"
         except: ours=False
         if ours:
+            #print "sTracks: source(%s) ref(%s) list_dic: %s" % (source, ref, list_dic)
             mswitch.publish(self.agent, "mb_tracks", source, ref, list_dic)
         self.mb_detected_count+=1
             
