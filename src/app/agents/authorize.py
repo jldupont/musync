@@ -16,10 +16,14 @@
     Created on 2010-08-15
     @author: jldupont
 """
+__all__=["AuthorizeAgent"]
+
 import oauth.oauth as oauth
 import httplib
 import webbrowser
-from app.system.base    import AgentThreadedBase
+
+from app.system.base import AgentThreadedBase
+from app.system.state import StateManager
 
 class OauthClient(object):
     
@@ -55,16 +59,18 @@ class AuthorizeAgent(AgentThreadedBase):
     CONSUMER_SECRET="PkyFMaAhcPacERXjRWFv1a/U"
     CALLBACK_URL = "oob"
     
-    def __init__(self):
+    def __init__(self, app_name):
         """
         @param interval: interval in seconds
         """
         AgentThreadedBase.__init__(self)
+        self.app_name=app_name
         self.client=OauthClient()
         self.consumer=None
         self.signature_method_plaintext = oauth.OAuthSignatureMethod_PLAINTEXT()
         self.signature_method_hmac_sha1 = oauth.OAuthSignatureMethod_HMAC_SHA1()
         self.token=None
+        self.sm=StateManager(self.app_name)
 
     def h_start_authorize(self, *_):
         try:
@@ -114,5 +120,7 @@ class AuthorizeAgent(AgentThreadedBase):
         self.pub("log", "oauth: key: %s  secret: %s" % (key, secret))
 
 
+"""
 _=AuthorizeAgent()
 _.start()
+"""
