@@ -77,6 +77,10 @@ _la.start()
 from app.agents._tester import TesterAgent  #@UnusedImport
 import app.agents.monitor
 
+from app.agents.uploader import UploaderAgent
+_upa=UploaderAgent(DEV_MODE)
+_upa.start()
+
 ### ===========================================================
 ###
 

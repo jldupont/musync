@@ -10,14 +10,12 @@
     Messages Processed:
     ===================
     - "in_rating"
-    - "rating_uploaded"
+    - "rating_uploaded" : signals that a specific entry as been uploaded to the web-service
     - "to_update" : received from 'ratings_db' once an entry has been cleared for upload
         
     Messages Emitted:
     =================
-    
-    
-    INSERT INTO cache () VALUES ()
+    - "to_upload" : list of entries to upload to web-service
     
 
     @author: jldupont
@@ -34,6 +32,7 @@ __all__=["RatingsCacheAgent",]
 class RatingsCacheAgent(AgentThreadedWithEvents):
     
     TIMERS_SPEC=[ ("min", 1, "t_processMbid")
+                 ,("min", 2, "t_findUploads")
                  #,("min", 1, "t_processDetectMb")
                  ]
 
@@ -48,17 +47,15 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                   ,("rating",      "float")
                   ]
     
+    BATCH_UPLOAD_MAX=100
     BATCH_MBID_MAX=200
     #MB_DETECT_GONE_THRESHOLD=3 ## minutes
     
     def __init__(self, dbpath, dev_mode=False):
         AgentThreadedWithEvents.__init__(self)
-        #self.mb_minutes_since_last_saw=0
-        #self.mb_present=False
-        
         self.dbh=DbHelper(dbpath, "ratings_cache", self.TABLE_PARAMS)
+        self.mb_detected=False
         
-    #source, ref, timestamp, artist_name, album_name, track_name, rating)
     def h_to_update(self, source, ref, timestamp, artist_name, album_name, track_name, rating):
         """
         Caches the rating locally once the database has determine it is OK to do so
@@ -114,9 +111,42 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         except Exception,e:
             self.pub("llog", "fpath/cache", "error", "Database update error (%s)" % e)
 
+    def _getUploadBatch(self, known_mbid=True, limit=200):
+        """
+        Retrieves a list of entries ready for upload
+        
+        The entries can either be selected by 'known track_mbid, top of list' 
+        or just 'top of list'
+        """
+        lim=min(limit, self.BATCH_UPLOAD_MAX)
+        
+        if known_mbid:
+            statement="""SELECT * FROM %s 
+                        WHERE track_mbid=<>'' AND track_mbid<>'?' ORDER BY updated ASC LIMIT %s""" % (self.dbh.table_name, lim)
+        else:
+            statement="""SELECT * FROM %s 
+                        ORDER BY updated ASC LIMIT %s""" % (self.dbh.table_name, lim)
+            
+        try:
+            self.dbh.executeStatement(statement)
+            results=self.dbh.fetchAllEx([])
+        except Exception,e:
+            self.pub("llog", "fpath/cache", "error", "Database reading error (%s)" % e)
+            self.dprint("cache: database read error: %s" % e)
+            results=[]
+        
+        return results
+
+
     ## ===============================================================================
     ## =============================================================================== HANDLERS
     ## ===============================================================================
+    def h_mb_detected(self, state):
+        """
+        Debouncing & hysterisis all done
+        when using this message
+        """
+        self.mb_detected=state
 
     def h_rating_uploaded(self, id, *_):
         """
@@ -129,20 +159,6 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             self.dbh.commit()
         except:
             pass
-
-    def hq_next_to_upload(self, limit):
-        """
-        Returns the next entry to upload
-        """
-        try:
-            statement="""SELECT * from %s ORDER BY updated ASC LIMIT ?""" % self.dbh.table_name
-            self.dbh.executeStatement(statement, limit)
-            entries=self.dbh.fetchAllEx()
-        except Exception,e:
-            self.pub("llog", "fpath/cache", "error", "Database reading error (%s)" % e)
-            return
-        
-        self.pub("to_upload", entries)
 
     def h_mb_tracks(self, _source, ref, list_dic):
         """
@@ -166,7 +182,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
                     track_mbid="?"
                     self.pub("log", "Track Mbid not found: artist(%s) title(%s)" % (artist_name, track_name))
                 self._updateMbid(artist_name, track_name, track_mbid)
-                print "Track updated: artist(%s) album(%s) title(%s)" % (artist_name, track_name)
+                #print "Track updated: artist(%s) title(%s)" % (artist_name, track_name)
         except Exception,e:
             self.pub("llog", "fpath/cache", "error", "RatingsCache: problem updating 'track_mbid' (%s)" % e)
             
@@ -200,7 +216,17 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             self.mb_present=False
     """
     
-    
+    def t_findUploads(self, *_):
+        """
+        Determines which entries are ready to be uploaded
+        """
+        if self.mb_detected:
+            batch=self._getUploadBatch(known_mbid=True, 0)  ## get max
+        else:
+            batch=self._getUploadBatch(known_mbid=False, 0) ## get max
+
+        if len(batch) > 0:
+            self.pub("to_upload", batch)    
 """        
 _=RatingsCacheAgent(DBPATH)
 _.start()

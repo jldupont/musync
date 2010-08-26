@@ -9,7 +9,7 @@
     
     Message Generated:
     =================
-    - "mb_detected"
+    - "mb_detected"(state) : the state of detection of 'musicbrainz-proxy-dbus' service
         
 
     Created on 2010-08-23
