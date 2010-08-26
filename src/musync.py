@@ -3,6 +3,8 @@
     
     @author: jldupont
 """
+import os
+import sys
 
 APP_NAME = "musync"
 APP_ICON = APP_NAME
@@ -18,14 +20,19 @@ TICKS_SECOND=1000/TIME_BASE
 MSWITCH_OBSERVE_MODE=False
 DEV_MODE=True
 ###>>>
-       
-import os
-import sys
 
 ## For development environment
 ppkg=os.path.abspath( os.getcwd() +"/app")
 if os.path.exists(ppkg):
     sys.path.insert(0, ppkg)
+
+try:
+    import oauth #@UnusedImport
+except:
+    from app.agents.notifier import notify
+    notify(APP_NAME, APP_ICON, "Requires 'python-oauth' package")
+    sys.exit(1)
+    
 
 import gobject
 import dbus.glib

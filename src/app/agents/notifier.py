@@ -15,11 +15,24 @@
     @author: jldupont
     Created on Jun 28, 2010
 """
-import pynotify
+try:
+    import pynotify
+except:
+    pass
 
 from app.system.base import AgentThreadedBase
 
-__all__=["NotifierAgent"]
+__all__=["NotifierAgent", "notify"]
+
+
+def notify(app_name, icon_name, msg):
+    try:
+        pynotify.init(app_name)
+        n=pynotify.Notification(app_name, msg, icon_name)
+        n.show()
+    except:
+        print "%s: %s" % (app_name, msg)
+    
 
 class NotifierAgent(AgentThreadedBase):
     

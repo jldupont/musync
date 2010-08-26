@@ -83,11 +83,18 @@ class AuthorizeAgent(AgentThreadedBase):
             self.pub("log", "warning", "Authorization: 'RequestToken' failed: "+str(e))
             return
 
-        self.pub("log", "getting authorization from url: "+url)        
-        webbrowser.open(url)
+        self.pub("log", "getting authorization from url: "+url)
+        try:        
+            webbrowser.open(url)
+        except Exception,e:
+            self.pub("log", "error", "Opening url(%s)" % url)
         
     def h_start_verify(self, verificationCode):
-        print verificationCode
+        """
+        Got verification code from user
+        
+        Attempting to retrieve "access token"
+        """
         try:
             self.consumer = oauth.OAuthConsumer(self.CONSUMER_KEY, self.CONSUMER_SECRET)
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=self.token, 
