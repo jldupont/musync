@@ -96,6 +96,7 @@ class AuthorizeAgent(AgentThreadedBase):
             oauth_request.sign_request(self.signature_method_hmac_sha1, self.consumer, self.token)
             self.atoken = self.client.fetch_access_token(oauth_request)
         except Exception,e:
+            self.pub("oauth", None, None)
             self.pub("error_accesstoken", e)
             self.pub("log", "warning", "Verification: 'AccessToken' failed: "+str(e))
             return
