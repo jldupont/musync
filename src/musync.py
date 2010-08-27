@@ -25,6 +25,7 @@ OAUTH_BASE = "http://services.systemical.com/_ah/"
 
 ###<<< DEVELOPMENT MODE SWITCHES
 MSWITCH_OBSERVE_MODE=False
+MSWITCH_DEBUGGING_MODE=False
 DEV_MODE=True
 ###>>>
 
@@ -55,6 +56,7 @@ try:
     base.debug=DEV_MODE
     from app.system import mswitch #@UnusedImport
     mswitch.observe_mode=MSWITCH_OBSERVE_MODE
+    mswitch.debugging_mode=MSWITCH_DEBUGGING_MODE
     
     ### ===========================================================
     ### Agents which require configuration

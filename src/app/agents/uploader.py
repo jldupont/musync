@@ -37,22 +37,23 @@ class UploaderAgent(AgentThreadedBase):
         Rating entries to upload to web-service
         """
         if entries is None:
+            self.dprint("!!! uploader: no entries...")
             return
         
         try:    c=len(entries)
         except: c=0
         
         if c==0:
+            self.dprint("!!! uploader: no entries...")
             return
 
         ## can't do much without the required access token...
         ## @todo: rate limit this maybe? 
-        if self.akey is None or self.asecret is None:
+        if self.token is None:
             self.pub("oauth?")
+            self.dprint("!! asking for oauth parameters...")
             return
             
-        if self.token is None:
-            return
         
         print "]]]] h_ratings_to_upload: entry[0]: %s" % entries[0]
             

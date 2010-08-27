@@ -21,6 +21,7 @@ OBSERVE_FILTER_OUT_SOURCES=["__bridge__",]
 #OSBSERVE_FILTER_OUT=["log", "llog"]
             
 observe_mode=False
+debugging_mode=False
 
 class CentralSwitch(Thread):
     """
@@ -121,7 +122,8 @@ class CentralSwitch(Thread):
         agent_name, agent_id, mtype, interest, snooping, _q, _iq = payload
         self.imap[(agent_id, mtype)]=(interest, snooping)
         
-        print ":::: do_interest: source(%s) mtype(%s) interest(%s) snooping(%s)" % (agent_name, mtype, interest, snooping)
+        if debugging_mode:
+            print ":::: do_interest: source(%s) mtype(%s) interest(%s) snooping(%s)" % (agent_name, mtype, interest, snooping)
                
                 
     def do_sub(self, orig, q, sq):

@@ -45,7 +45,7 @@ def mdispatch(obj, this_source, envelope):
         pargs=()
         kargs=()
     
-    ## Avoid sending to self
+    ## Avoid sending to self -- shouldn't occur at this point anyways
     if orig == this_source:
         print "************* mdispatch: dropped: orig(%s) obj_orig(%s) mtype(%s)" % (orig, this_source, mtype)
         return (False, mtype, None, False)
@@ -155,7 +155,8 @@ def message_processor(src_agent, agent_name, agent_id, interest_map, responsesIn
                 if handled is None:
                     handled=False
                     
-                print "+++ interest msg-orig(%s) target(%s) mtype(%s): (%s)" % (orig, agent_name, mtype, handled)
+                if debug:
+                    print "+++ interest msg-orig(%s) target(%s) mtype(%s): (%s)" % (orig, agent_name, mtype, handled)
                 interest_map[mtype]=handled
         
     return quit

@@ -118,7 +118,10 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         The entries can either be selected by 'known track_mbid, top of list' 
         or just 'top of list'
         """
-        lim=min(limit, self.BATCH_UPLOAD_MAX)
+        if limit==0:
+            lim=self.BATCH_UPLOAD_MAX
+        else:
+            lim=min(limit, self.BATCH_UPLOAD_MAX)
         
         if known_mbid:
             statement="""SELECT * FROM %s 
@@ -224,6 +227,8 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             batch=self._getUploadBatch(known_mbid=True, limit=0)  ## get max
         else:
             batch=self._getUploadBatch(known_mbid=False, limit=0) ## get max
+
+        print "!!! t_findUploads: %s" % len(batch)
 
         if len(batch) > 0:
             self.pub("ratings_to_upload", batch)    
