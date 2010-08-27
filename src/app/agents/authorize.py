@@ -39,7 +39,7 @@ class OauthClient(object):
         self.base=base
         self.request_token_url=self.base+self.gREQUEST_TOKEN_URL
         self.access_token_url=self.base+self.gACCESS_TOKEN_URL
-        self.authorize_token=self.base+self.gAUTHORIZATION_URL
+        self.authorize_token_url=self.base+self.gAUTHORIZATION_URL
         self.connection = httplib.HTTPConnection("%s:%d" % (self.server, self.port))
         
     def fetch_request_token(self, oauth_request):
@@ -67,18 +67,19 @@ class AuthorizeAgent(AgentThreadedBase):
     ACCESS_TOKEN_SECRET="oauth_access_token_secret"
     VERIFICATION_CODE="oauth_verification_code"
     
-    def __init__(self, app_name, server, port, consumer_key, consumer_secret):
+    def __init__(self, app_name, server, port, consumer_key, consumer_secret, base):
         """
         @param interval: interval in seconds
         """
         AgentThreadedBase.__init__(self)
         self.server=server
         self.port=port
+        self.base=base
         
         self.consumer_key=consumer_key
         self.consumer_secret=consumer_secret
         self.app_name=app_name
-        self.client=OauthClient(server, port)
+        self.client=OauthClient(server, port, base)
         self.consumer=None
         self.signature_method_plaintext = oauth.OAuthSignatureMethod_PLAINTEXT()
         self.signature_method_hmac_sha1 = oauth.OAuthSignatureMethod_HMAC_SHA1()
@@ -91,11 +92,11 @@ class AuthorizeAgent(AgentThreadedBase):
             self.consumer = oauth.OAuthConsumer(self.consumer_key, self.consumer_secret)            
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, 
                                                                        callback=self.CALLBACK_URL, 
-                                                                       http_url=self.client.REQUEST_TOKEN_URL)
+                                                                       http_url=self.client.request_token_url)
             oauth_request.sign_request(self.signature_method_hmac_sha1, self.consumer, None)
             self.token = self.client.fetch_request_token(oauth_request)
             oauth_request = oauth.OAuthRequest.from_token_and_callback(token=self.token, 
-                                                                       http_url=self.client.AUTHORIZATION_URL)
+                                                                       http_url=self.client.authorize_token_url)
             url= oauth_request.to_url()
             self.sm.save(self.REQUEST_TOKEN, self.token)
         except Exception,e:
@@ -106,6 +107,7 @@ class AuthorizeAgent(AgentThreadedBase):
         self.pub("log", "getting authorization from url: "+url)
         try:        
             webbrowser.open(url)
+            print url
         except Exception,e:
             self.pub("log", "error", "Opening url(%s)" % url)
         
@@ -119,7 +121,7 @@ class AuthorizeAgent(AgentThreadedBase):
             self.consumer = oauth.OAuthConsumer(self.consumer_key, self.consumer_secret)
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=self.token, 
                                                                        verifier=verificationCode, 
-                                                                       http_url=self.client.ACCESS_TOKEN_URL)
+                                                                       http_url=self.client.access_token_url)
             oauth_request.sign_request(self.signature_method_hmac_sha1, self.consumer, self.token)
             self.atoken = self.client.fetch_access_token(oauth_request)
         except Exception,e:

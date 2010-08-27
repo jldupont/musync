@@ -32,7 +32,7 @@ __all__=["RatingsCacheAgent",]
 class RatingsCacheAgent(AgentThreadedWithEvents):
     
     TIMERS_SPEC=[ ("min", 1, "t_processMbid")
-                 ,("min", 2, "t_findUploads")
+                 ,("min", 1, "t_findUploads")
                  #,("min", 1, "t_processDetectMb")
                  ]
 
@@ -122,7 +122,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         
         if known_mbid:
             statement="""SELECT * FROM %s 
-                        WHERE track_mbid=<>'' AND track_mbid<>'?' ORDER BY updated ASC LIMIT %s""" % (self.dbh.table_name, lim)
+                        WHERE track_mbid<>'' AND track_mbid<>'?' ORDER BY updated ASC LIMIT %s""" % (self.dbh.table_name, lim)
         else:
             statement="""SELECT * FROM %s 
                         ORDER BY updated ASC LIMIT %s""" % (self.dbh.table_name, lim)
@@ -221,9 +221,9 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
         Determines which entries are ready to be uploaded
         """
         if self.mb_detected:
-            batch=self._getUploadBatch(known_mbid=True, 0)  ## get max
+            batch=self._getUploadBatch(known_mbid=True, limit=0)  ## get max
         else:
-            batch=self._getUploadBatch(known_mbid=False, 0) ## get max
+            batch=self._getUploadBatch(known_mbid=False, limit=0) ## get max
 
         if len(batch) > 0:
             self.pub("ratings_to_upload", batch)    

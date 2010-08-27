@@ -36,8 +36,17 @@ class UploaderAgent(AgentThreadedBase):
         """
         Rating entries to upload to web-service
         """
+        if entries is None:
+            return
         
+        try:    c=len(entries)
+        except: c=0
+        
+        if c==0:
+            return
+
         ## can't do much without the required access token...
+        ## @todo: rate limit this maybe? 
         if self.akey is None or self.asecret is None:
             self.pub("oauth?")
             return
@@ -45,6 +54,7 @@ class UploaderAgent(AgentThreadedBase):
         if self.token is None:
             return
         
+        print "]]]] h_ratings_to_upload: entry[0]: %s" % entries[0]
             
         oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, 
                                                                    token=self.token, 
@@ -55,9 +65,11 @@ class UploaderAgent(AgentThreadedBase):
         oauth_request.sign_request(self.signature_method_hmac_sha1, self.consumer, self.token)
         
         headers = {'Content-Type' :'application/x-www-form-urlencoded'}
-        self.connection.request('POST', RESOURCE_URL, body=oauth_request.to_postdata(), headers=headers)
+        self.connection.request('POST', self.end_point, body=oauth_request.to_postdata(), headers=headers)
         response = self.connection.getresponse()
-        return response.read()
+        rep=response.read()
+        print rep
+
         
     
  
