@@ -8,6 +8,7 @@
     - "start_authorize"
     - "start_verify"
     - "oauth_error"
+    - "oauth?"
     
     Messages Generated:
     - "error_requesttoken"
@@ -28,23 +29,26 @@ from app.system.state import StateManager
 
 class OauthClient(object):
     
-    SERVER = 'services.systemical.com'
-    PORT = 80
-    BASE = "http://services.systemical.com/_ah/"
-    REQUEST_TOKEN_URL = BASE+'OAuthGetRequestToken'
-    ACCESS_TOKEN_URL =  BASE+'OAuthGetAccessToken'
-    AUTHORIZATION_URL = BASE+'OAuthAuthorizeToken'
+    gREQUEST_TOKEN_URL = 'OAuthGetRequestToken'
+    gACCESS_TOKEN_URL =  'OAuthGetAccessToken'
+    gAUTHORIZATION_URL = 'OAuthAuthorizeToken'
     
-    def __init__(self):
-        self.connection = httplib.HTTPConnection("%s:%d" % (self.SERVER, self.PORT))
+    def __init__(self, server, port, base):
+        self.server=server
+        self.port=port
+        self.base=base
+        self.request_token_url=self.base+self.gREQUEST_TOKEN_URL
+        self.access_token_url=self.base+self.gACCESS_TOKEN_URL
+        self.authorize_token=self.base+self.gAUTHORIZATION_URL
+        self.connection = httplib.HTTPConnection("%s:%d" % (self.server, self.port))
         
     def fetch_request_token(self, oauth_request):
-        self.connection.request(oauth_request.http_method, self.REQUEST_TOKEN_URL, headers=oauth_request.to_header()) 
+        self.connection.request(oauth_request.http_method, self.request_token_url, headers=oauth_request.to_header()) 
         response = self.connection.getresponse()
         return oauth.OAuthToken.from_string(response.read())
         
     def fetch_access_token(self, oauth_request):
-        self.connection.request(oauth_request.http_method, self.ACCESS_TOKEN_URL, headers=oauth_request.to_header()) 
+        self.connection.request(oauth_request.http_method, self.access_token_url, headers=oauth_request.to_header()) 
         response = self.connection.getresponse()
         return oauth.OAuthToken.from_string(response.read())
 
@@ -56,21 +60,25 @@ class OauthClient(object):
 
 class AuthorizeAgent(AgentThreadedBase):
 
-    CONSUMER_KEY="services.systemical.com"
-    CONSUMER_SECRET="PkyFMaAhcPacERXjRWFv1a/U"
     CALLBACK_URL = "oob"
     
     REQUEST_TOKEN="oauth_request_token"
-    ACCESS_TOKEN="oauth_access_token"
+    ACCESS_TOKEN_KEY="oauth_access_token_key"
+    ACCESS_TOKEN_SECRET="oauth_access_token_secret"
     VERIFICATION_CODE="oauth_verification_code"
     
-    def __init__(self, app_name):
+    def __init__(self, app_name, server, port, consumer_key, consumer_secret):
         """
         @param interval: interval in seconds
         """
         AgentThreadedBase.__init__(self)
+        self.server=server
+        self.port=port
+        
+        self.consumer_key=consumer_key
+        self.consumer_secret=consumer_secret
         self.app_name=app_name
-        self.client=OauthClient()
+        self.client=OauthClient(server, port)
         self.consumer=None
         self.signature_method_plaintext = oauth.OAuthSignatureMethod_PLAINTEXT()
         self.signature_method_hmac_sha1 = oauth.OAuthSignatureMethod_HMAC_SHA1()
@@ -80,7 +88,7 @@ class AuthorizeAgent(AgentThreadedBase):
     def h_start_authorize(self, *_):
         try:
             self.token=None
-            self.consumer = oauth.OAuthConsumer(self.CONSUMER_KEY, self.CONSUMER_SECRET)            
+            self.consumer = oauth.OAuthConsumer(self.consumer_key, self.consumer_secret)            
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, 
                                                                        callback=self.CALLBACK_URL, 
                                                                        http_url=self.client.REQUEST_TOKEN_URL)
@@ -108,7 +116,7 @@ class AuthorizeAgent(AgentThreadedBase):
         Attempting to retrieve "access token"
         """
         try:
-            self.consumer = oauth.OAuthConsumer(self.CONSUMER_KEY, self.CONSUMER_SECRET)
+            self.consumer = oauth.OAuthConsumer(self.consumer_key, self.consumer_secret)
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=self.token, 
                                                                        verifier=verificationCode, 
                                                                        http_url=self.client.ACCESS_TOKEN_URL)
@@ -116,19 +124,26 @@ class AuthorizeAgent(AgentThreadedBase):
             self.atoken = self.client.fetch_access_token(oauth_request)
         except Exception,e:
             self.atoken=None
+            self.sm.save(self.ACCESS_TOKEN_KEY, "")
+            self.sm.save(self.ACCESS_TOKEN_SECRET, "")
             self.pub("oauth", None, None)
             self.pub("error_accesstoken", e)
             self.pub("log", "warning", "Verification: 'AccessToken' failed: "+str(e))
             return
         finally:
-            self.sm.save(self.ACCESS_TOKEN, self.atoken)
             self.sm.save(self.VERIFICATION_CODE, verificationCode)
             
-        
-        key=self.atoken.key
-        secret=self.atoken.secret
-        self.pub("oauth", key, secret)
-        self.pub("log", "oauth: key: %s  secret: %s" % (key, secret))
+        try:
+            key=self.atoken.key
+            secret=self.atoken.secret
+            self.pub("oauth", key, secret)
+            self.pub("log", "oauth: key: %s  secret: %s" % (key, secret))
+            self.sm.save(self.ACCESS_TOKEN_KEY, key)
+            self.sm.save(self.ACCESS_TOKEN_SECRET, secret)
+        except:
+            self.sm.save(self.ACCESS_TOKEN_KEY, "")
+            self.sm.save(self.ACCESS_TOKEN_SECRET, "")            
+            self.pub("log", "warning", "Verification: 'AccessToken' failed: "+str(e))            
 
     def h_oauth_error(self, *_):
         """
@@ -136,6 +151,12 @@ class AuthorizeAgent(AgentThreadedBase):
         """
         self.sm.save(self.ACCESS_TOKEN, "")
         self.sm.save(self.VERIFICATION_CODE, "")
+
+    def hq_oauth(self):
+        key=self.sm.retrieve(self.ACCESS_TOKEN_KEY)
+        secret=self.sm.retrieve(self.ACCESS_TOKEN_SECRET)
+        self.pub("oauth", key, secret)
+        
 
 """
 _=AuthorizeAgent()

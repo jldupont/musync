@@ -226,7 +226,7 @@ class RatingsCacheAgent(AgentThreadedWithEvents):
             batch=self._getUploadBatch(known_mbid=False, 0) ## get max
 
         if len(batch) > 0:
-            self.pub("to_upload", batch)    
+            self.pub("ratings_to_upload", batch)    
 """        
 _=RatingsCacheAgent(DBPATH)
 _.start()

@@ -15,6 +15,13 @@ DB_PATH ="~/"+APP_NAME+".sqlite"
 HELP_URL="http://www.systemical.com/doc/opensource/"+APP_NAME
 TIME_BASE=250  ##milliseconds
 TICKS_SECOND=1000/TIME_BASE
+WS_RATINGS_END_POINT="services.systemical.com/ratings/v1"
+CONSUMER_KEY="services.systemical.com"
+CONSUMER_SECRET="PkyFMaAhcPacERXjRWFv1a/U"
+SERVER = 'services.systemical.com'
+PORT = 80
+OAUTH_BASE = "http://services.systemical.com/_ah/"
+
 
 ###<<< DEVELOPMENT MODE SWITCHES
 MSWITCH_OBSERVE_MODE=False
@@ -53,7 +60,7 @@ try:
     ### Agents which require configuration
     ###
     from app.agents.notifier import NotifierAgent
-    import app.agents.ratings_dbus  #@UnusedImport
+    import app.agents.ratings_dbus  #@UnresolvedImport @UnusedImport
     from app.agents.ratings_cache import RatingsCacheAgent
     _rca=RatingsCacheAgent(DB_PATH, DEV_MODE)
     _rca.start()
@@ -62,7 +69,7 @@ try:
     _rda=RatingsDbAgent(DB_PATH, DEV_MODE)
     _rda.start()
     
-    import app.agents.mb_dbus       #@UnusedImport
+    import app.agents.mb_dbus       #@UnresolvedImport @UnusedImport
     
     from app.agents.tray import TrayAgent
     _ta=TrayAgent(APP_NAME, ICON_PATH, ICON_FILE, HELP_URL)
@@ -83,10 +90,10 @@ try:
     #_ca.start()
     
     from app.agents._tester import TesterAgent  #@UnusedImport
-    import app.agents.monitor
+    import app.agents.monitor #@UnresolvedImport @UnusedImport
     
     from app.agents.uploader import UploaderAgent
-    _upa=UploaderAgent(DEV_MODE)
+    _upa=UploaderAgent(WS_RATINGS_END_POINT, SERVER, PORT, CONSUMER_KEY, CONSUMER_SECRET, DEV_MODE)
     _upa.start()
     
     ### ===========================================================
@@ -94,7 +101,7 @@ try:
     
     #from app.agents import adbus
     from app.agents.authorize import AuthorizeAgent  #@UnusedImport
-    _authAgent=AuthorizeAgent(APP_NAME)
+    _authAgent=AuthorizeAgent(APP_NAME, SERVER, PORT, CONSUMER_KEY, CONSUMER_SECRET, OAUTH_BASE)
     _authAgent.start()
     
     from app.agents.ui import UiAgent
