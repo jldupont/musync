@@ -26,6 +26,7 @@ OAUTH_BASE = "http://services.systemical.com/_ah/"
 ###<<< DEVELOPMENT MODE SWITCHES
 MSWITCH_OBSERVE_MODE=False
 MSWITCH_DEBUGGING_MODE=False
+MSWITCH_DEBUG_INTEREST=False
 DEV_MODE=True
 ###>>>
 
@@ -54,6 +55,7 @@ try:
     
     from app.system import base as base
     base.debug=DEV_MODE
+    base.debug_interest=MSWITCH_DEBUG_INTEREST
     from app.system import mswitch #@UnusedImport
     mswitch.observe_mode=MSWITCH_OBSERVE_MODE
     mswitch.debugging_mode=MSWITCH_DEBUGGING_MODE

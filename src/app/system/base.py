@@ -20,10 +20,12 @@ import uuid
 
 import mswitch
 
-__all__=["AgentThreadedBase", "AgentThreadedWithEvents", "debug", "mdispatch", 
+__all__=["AgentThreadedBase", "AgentThreadedWithEvents", "debug", "debug_interest" 
+         "mdispatch", 
          "process_queues", "message_processor"]
 
 debug=False
+debug_interest=False
 
 
 def mdispatch(obj, this_source, envelope):
@@ -155,7 +157,7 @@ def message_processor(src_agent, agent_name, agent_id, interest_map, responsesIn
                 if handled is None:
                     handled=False
                     
-                if debug:
+                if debug_interest:
                     print "+++ interest msg-orig(%s) target(%s) mtype(%s): (%s)" % (orig, agent_name, mtype, handled)
                 interest_map[mtype]=handled
         
